@@ -77,6 +77,7 @@ router.get("/alerts/feed", async (req, res): Promise<void> => {
     return;
   }
   const { teamIds, limit } = parsed.data;
+  const sport = sportFromQuery(req.query.sport);
   const conditions = [];
   if (teamIds && teamIds.trim().length > 0) {
     const ids = teamIds
@@ -85,6 +86,7 @@ router.get("/alerts/feed", async (req, res): Promise<void> => {
       .filter(Boolean);
     if (ids.length) conditions.push(inArray(alertsTable.teamId, ids));
   }
+  if (sport) conditions.push(eq(teamsTable.sport, sport));
   const rows = await db
     .select({ alert: alertsTable, team: teamsTable })
     .from(alertsTable)

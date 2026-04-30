@@ -159,6 +159,12 @@ paths:
           schema:
             type: integer
             default: 100
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba). Omit for all sports.
       responses:
         "200":
           description: Feed

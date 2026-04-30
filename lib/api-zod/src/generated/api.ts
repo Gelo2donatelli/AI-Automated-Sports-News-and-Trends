@@ -150,6 +150,10 @@ export const GetAlertFeedQueryParams = zod.object({
       "Comma-separated list of team ids to include. Empty means all teams.",
     ),
   limit: zod.coerce.number().default(getAlertFeedQueryLimitDefault),
+  sport: zod.coerce
+    .string()
+    .optional()
+    .describe("Filter by sport (nfl, mlb, nba). Omit for all sports."),
 });
 
 export const GetAlertFeedResponseItem = zod.object({
