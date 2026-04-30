@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "NFL News Alerts"
+version = "1.0.0"
+id = "artifacts/nfl-alerts"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18700
+
+[services.development]
+run = "pnpm --filter @workspace/nfl-alerts run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nfl-alerts", "run", "build" ]
+publicDir = "artifacts/nfl-alerts/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18700"
+BASE_PATH = "/"

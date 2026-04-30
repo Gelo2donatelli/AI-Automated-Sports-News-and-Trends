@@ -1,0 +1,63 @@
+import { ReactNode } from "react";
+import { Link, useLocation } from "wouter";
+import { Zap, Activity, Users, Settings, Rss } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export function Layout({ children }: LayoutProps) {
+  const [location] = useLocation();
+
+  const navigation = [
+    { name: "Live Feed", href: "/", icon: Rss },
+    { name: "Breaking", href: "/breaking", icon: Zap },
+    { name: "Teams", href: "/teams", icon: Users },
+    { name: "Preferences", href: "/preferences", icon: Settings },
+  ];
+
+  return (
+    <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+      <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
+        <div className="container mx-auto flex h-14 items-center px-4">
+          <Link href="/" className="flex items-center gap-2 font-mono font-bold tracking-tighter text-lg hover:text-primary transition-colors">
+            <Activity className="h-5 w-5 text-primary" />
+            <span>GRIDIRON<span className="text-primary">ALERTS</span></span>
+          </Link>
+
+          <nav className="ml-auto hidden md:flex items-center gap-6 text-sm font-medium">
+            {navigation.map((item) => {
+              const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 transition-colors hover:text-foreground",
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  <item.icon className={cn("h-4 w-4", isActive && "text-primary")} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
+        {children}
+      </main>
+
+      <footer className="border-t border-border py-6 md:py-8 mt-auto bg-card">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-widest opacity-50 flex items-center justify-center gap-2">
+            <Activity className="h-3 w-3" /> Gridiron Alerts Terminal
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}

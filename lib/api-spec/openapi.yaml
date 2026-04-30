@@ -3,20 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: NFL News Alerts API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: teams
+    description: NFL team operations
+  - name: alerts
+    description: News alert operations
+  - name: preferences
+    description: User preference operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,261 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /teams:
+    get:
+      operationId: listTeams
+      tags: [teams]
+      summary: List all NFL teams
+      responses:
+        "200":
+          description: Teams list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+
+  /teams/{teamId}:
+    get:
+      operationId: getTeam
+      tags: [teams]
+      summary: Get a single NFL team
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List news alerts
+      parameters:
+        - name: teamId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by team id
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by alert category (injury, trade, lineup, performance, signing, suspension, general)
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by priority (breaking, high, normal)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alerts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/{alertId}:
+    get:
+      operationId: getAlert
+      tags: [alerts]
+      summary: Get a single alert
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+  /alerts/feed:
+    get:
+      operationId: getAlertFeed
+      tags: [alerts]
+      summary: Get the live alert feed grouped by drop time
+      parameters:
+        - name: teamIds
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of team ids to include. Empty means all teams.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/breaking:
+    get:
+      operationId: getBreakingAlerts
+      tags: [alerts]
+      summary: Get the most recent breaking alerts across the league
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Breaking alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/by-team:
+    get:
+      operationId: getAlertsByTeam
+      tags: [alerts]
+      summary: Get alerts grouped by team
+      parameters:
+        - name: limitPerTeam
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 5
+      responses:
+        "200":
+          description: Alerts grouped by team
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamAlertsGroup"
+
+  /alerts/refresh:
+    post:
+      operationId: refreshAlerts
+      tags: [alerts]
+      summary: Trigger a manual refresh of news from all team feeds
+      responses:
+        "200":
+          description: Refresh result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResult"
+
+  /stats/overview:
+    get:
+      operationId: getOverviewStats
+      tags: [alerts]
+      summary: Dashboard overview stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverviewStats"
+
+  /stats/trending-teams:
+    get:
+      operationId: getTrendingTeams
+      tags: [alerts]
+      summary: Teams with most news activity in the last 24h
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 8
+      responses:
+        "200":
+          description: Trending teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrendingTeam"
+
+  /preferences:
+    get:
+      operationId: getPreferences
+      tags: [preferences]
+      summary: Get user team preferences (by client identifier)
+      parameters:
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+    put:
+      operationId: updatePreferences
+      tags: [preferences]
+      summary: Update user team preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreferencesInput"
+      responses:
+        "200":
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Preferences"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +294,213 @@ components:
       required:
         - status
 
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        abbreviation:
+          type: string
+        conference:
+          type: string
+        division:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        logoUrl:
+          type: string
+        slug:
+          type: string
+        alertCount:
+          type: integer
+      required:
+        - id
+        - name
+        - city
+        - abbreviation
+        - conference
+        - division
+        - primaryColor
+        - secondaryColor
+        - slug
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        teamId:
+          type: string
+        teamName:
+          type: string
+        teamCity:
+          type: string
+        teamAbbreviation:
+          type: string
+        teamPrimaryColor:
+          type: string
+        teamSecondaryColor:
+          type: string
+        teamLogoUrl:
+          type: string
+        headline:
+          type: string
+        summary:
+          type: string
+        category:
+          type: string
+          description: injury, trade, lineup, performance, signing, suspension, general
+        priority:
+          type: string
+          description: breaking, high, normal
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - teamId
+        - teamName
+        - teamCity
+        - teamAbbreviation
+        - teamPrimaryColor
+        - teamSecondaryColor
+        - headline
+        - category
+        - priority
+        - sourceName
+        - sourceUrl
+        - publishedAt
+        - createdAt
+
+    TeamAlertsGroup:
+      type: object
+      properties:
+        team:
+          $ref: "#/components/schemas/Team"
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+      required:
+        - team
+        - alerts
+
+    OverviewStats:
+      type: object
+      properties:
+        totalAlerts:
+          type: integer
+        alertsLast24h:
+          type: integer
+        breakingCount:
+          type: integer
+        teamsTracked:
+          type: integer
+        lastRefreshAt:
+          type: string
+          format: date-time
+        categoryCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+      required:
+        - totalAlerts
+        - alertsLast24h
+        - breakingCount
+        - teamsTracked
+        - categoryCounts
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+      required:
+        - category
+        - count
+
+    TrendingTeam:
+      type: object
+      properties:
+        team:
+          $ref: "#/components/schemas/Team"
+        alertsLast24h:
+          type: integer
+        latestHeadline:
+          type: string
+      required:
+        - team
+        - alertsLast24h
+
+    RefreshResult:
+      type: object
+      properties:
+        teamsRefreshed:
+          type: integer
+        newAlerts:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+      required:
+        - teamsRefreshed
+        - newAlerts
+        - startedAt
+        - finishedAt
+
+    Preferences:
+      type: object
+      properties:
+        clientId:
+          type: string
+        followedTeamIds:
+          type: array
+          items:
+            type: string
+        categoriesEnabled:
+          type: array
+          items:
+            type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - clientId
+        - followedTeamIds
+        - categoriesEnabled
+
+    PreferencesInput:
+      type: object
+      properties:
+        clientId:
+          type: string
+        followedTeamIds:
+          type: array
+          items:
+            type: string
+        categoriesEnabled:
+          type: array
+          items:
+            type: string
+      required:
+        - clientId
+        - followedTeamIds
+        - categoriesEnabled

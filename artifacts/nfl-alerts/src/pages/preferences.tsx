@@ -1,0 +1,197 @@
+import { useState, useEffect } from "react";
+import { Layout } from "@/components/layout";
+import { useClientId } from "@/hooks/use-client-id";
+import { useGetPreferences, useUpdatePreferences, useListTeams } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { TeamBadge } from "@/components/team-badge";
+import { useToast } from "@/hooks/use-toast";
+import { Settings, Save } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const CATEGORIES = [
+  { id: "injury", label: "Injuries", desc: "Player injuries, practice status, and game designations" },
+  { id: "trade", label: "Trades", desc: "Player trades and block rumors" },
+  { id: "lineup", label: "Lineups", desc: "Depth chart changes and starting announcements" },
+  { id: "performance", label: "Performance", desc: "Notable game stats and player performance" },
+  { id: "signing", label: "Signings", desc: "Free agent signings and contract extensions" },
+  { id: "suspension", label: "Suspensions", desc: "League discipline and team suspensions" },
+  { id: "general", label: "General News", desc: "Coaching changes, stadium news, general franchise info" }
+];
+
+export default function Preferences() {
+  const clientId = useClientId();
+  const { toast } = useToast();
+  
+  const { data: teams, isLoading: isTeamsLoading } = useListTeams();
+  const { data: prefs, isLoading: isPrefsLoading } = useGetPreferences(
+    { clientId: clientId || "" },
+    { query: { enabled: !!clientId } }
+  );
+
+  const updatePrefs = useUpdatePreferences();
+
+  const [followedTeams, setFollowedTeams] = useState<Set<string>>(new Set());
+  const [enabledCategories, setEnabledCategories] = useState<Set<string>>(new Set(CATEGORIES.map(c => c.id)));
+
+  useEffect(() => {
+    if (prefs) {
+      setFollowedTeams(new Set(prefs.followedTeamIds));
+      setEnabledCategories(new Set(prefs.categoriesEnabled));
+    }
+  }, [prefs]);
+
+  const toggleTeam = (teamId: string) => {
+    const newSet = new Set(followedTeams);
+    if (newSet.has(teamId)) {
+      newSet.delete(teamId);
+    } else {
+      newSet.add(teamId);
+    }
+    setFollowedTeams(newSet);
+  };
+
+  const toggleCategory = (catId: string) => {
+    const newSet = new Set(enabledCategories);
+    if (newSet.has(catId)) {
+      newSet.delete(catId);
+    } else {
+      newSet.add(catId);
+    }
+    setEnabledCategories(newSet);
+  };
+
+  const handleSave = () => {
+    if (!clientId) return;
+    
+    updatePrefs.mutate(
+      { 
+        data: {
+          clientId,
+          followedTeamIds: Array.from(followedTeams),
+          categoriesEnabled: Array.from(enabledCategories)
+        }
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Preferences Saved",
+            description: "Your terminal feed has been updated.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to save preferences.",
+            variant: "destructive"
+          });
+        }
+      }
+    );
+  };
+
+  const isLoaded = !isTeamsLoading && !isPrefsLoading && teams && clientId;
+
+  return (
+    <Layout>
+      <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <div className="h-10 w-10 bg-primary/10 rounded flex items-center justify-center text-primary">
+            <Settings className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight uppercase">Terminal Preferences</h1>
+            <p className="text-muted-foreground text-sm font-mono mt-1">Configure your alert feeds and filters</p>
+          </div>
+        </div>
+
+        {!isLoaded ? (
+          <div className="space-y-6">
+            <Skeleton className="h-[200px] w-full" />
+            <Skeleton className="h-[400px] w-full" />
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="uppercase tracking-wide">Alert Categories</CardTitle>
+                <CardDescription>Select which types of news you want to see on your dashboard.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6">
+                {CATEGORIES.map(category => (
+                  <div key={category.id} className="flex items-center justify-between space-x-2">
+                    <Label htmlFor={`cat-${category.id}`} className="flex flex-col space-y-1 cursor-pointer">
+                      <span className="font-semibold uppercase tracking-wider">{category.label}</span>
+                      <span className="font-normal text-muted-foreground text-sm">{category.desc}</span>
+                    </Label>
+                    <Switch
+                      id={`cat-${category.id}`}
+                      checked={enabledCategories.has(category.id)}
+                      onCheckedChange={() => toggleCategory(category.id)}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="uppercase tracking-wide">Followed Teams</CardTitle>
+                    <CardDescription>Select teams to prioritize in your "My Teams" feed.</CardDescription>
+                  </div>
+                  <div className="text-sm font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
+                    {followedTeams.size} Selected
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {teams.map(team => {
+                    const isSelected = followedTeams.has(team.id);
+                    return (
+                      <button
+                        key={team.id}
+                        onClick={() => toggleTeam(team.id)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-md border transition-all",
+                          isSelected 
+                            ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                            : "border-border bg-card hover:bg-muted/50 hover:border-muted-foreground/50"
+                        )}
+                      >
+                        <TeamBadge 
+                          abbreviation={team.abbreviation} 
+                          primaryColor={team.primaryColor} 
+                          size="md"
+                          className="mb-2 shadow-md" 
+                        />
+                        <span className="text-xs font-bold uppercase tracking-wider">{team.city}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end sticky bottom-6 z-10 pt-4">
+              <Button 
+                onClick={handleSave} 
+                disabled={updatePrefs.isPending}
+                size="lg"
+                className="font-mono shadow-lg shadow-primary/20"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {updatePrefs.isPending ? "SAVING..." : "SAVE PREFERENCES"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
