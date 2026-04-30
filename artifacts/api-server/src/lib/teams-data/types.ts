@@ -1,12 +1,14 @@
-export type Sport = "nfl" | "mlb" | "nba" | "ncaaf" | "golf";
+export type Sport = "nfl" | "mlb" | "nba" | "nhl" | "ncaaf" | "ncaab" | "golf";
 
-export const SPORTS: readonly Sport[] = ["nfl", "mlb", "nba", "ncaaf", "golf"] as const;
+export const SPORTS: readonly Sport[] = ["nfl", "mlb", "nba", "nhl", "ncaaf", "ncaab", "golf"] as const;
 
 export const SPORT_LABELS: Record<Sport, string> = {
   nfl: "NFL",
   mlb: "MLB",
   nba: "NBA",
+  nhl: "NHL",
   ncaaf: "NCAAF",
+  ncaab: "NCAAB",
   golf: "Golf",
 };
 

@@ -490,8 +490,12 @@ export async function ensureTeamsSeeded(): Promise<void> {
       nfl: rows.filter((r) => r.sport === "nfl").length,
       mlb: rows.filter((r) => r.sport === "mlb").length,
       nba: rows.filter((r) => r.sport === "nba").length,
+      nhl: rows.filter((r) => r.sport === "nhl").length,
+      ncaaf: rows.filter((r) => r.sport === "ncaaf").length,
+      ncaab: rows.filter((r) => r.sport === "ncaab").length,
+      golf: rows.filter((r) => r.sport === "golf").length,
     },
-    "Seeded teams across sports",
+    "Seeded teams and sources",
   );
 }
 

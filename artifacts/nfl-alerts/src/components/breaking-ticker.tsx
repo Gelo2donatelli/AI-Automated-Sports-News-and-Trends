@@ -17,7 +17,9 @@ const SPORT_LABEL: Record<string, string> = {
   nfl: "NFL",
   mlb: "MLB",
   nba: "NBA",
+  nhl: "NHL",
   ncaaf: "NCAA",
+  ncaab: "NCAAB",
   golf: "GOLF",
 };
 
