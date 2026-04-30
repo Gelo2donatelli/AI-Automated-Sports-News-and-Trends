@@ -31,6 +31,7 @@ function joinAlertWithTeam(alert: AlertRow, team: TeamRow) {
     summary: alert.summary ?? undefined,
     category: alert.category,
     priority: alert.priority,
+    importanceScore: alert.importanceScore,
     sourceName: alert.sourceName,
     sourceUrl: alert.sourceUrl,
     publishedAt: alert.publishedAt.toISOString(),
@@ -108,7 +109,8 @@ router.get("/alerts/breaking", async (req, res): Promise<void> => {
   }
   const { limit } = parsed.data;
   const sport = sportFromQuery(req.query.sport);
-  const conditions = [sql`${alertsTable.priority} IN ('breaking', 'high')`];
+  // importanceScore >= 8 is the canonical "breaking-tier" threshold
+  const conditions = [gte(alertsTable.importanceScore, 8)];
   if (sport) conditions.push(eq(teamsTable.sport, sport));
   const rows = await db
     .select({ alert: alertsTable, team: teamsTable })

@@ -10,6 +10,12 @@ export interface Alert {
   id: string;
   /** nfl, mlb, nba, ncaaf, golf */
   sport?: string;
+  /**
+   * Numeric importance score 1-10; alerts scoring 8+ are breaking-tier
+   * @minimum 1
+   * @maximum 10
+   */
+  importanceScore?: number;
   teamId: string;
   teamName: string;
   teamCity: string;

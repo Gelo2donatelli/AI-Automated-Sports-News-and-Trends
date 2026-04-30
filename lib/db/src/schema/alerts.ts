@@ -4,6 +4,7 @@ import {
   timestamp,
   uniqueIndex,
   index,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const alertsTable = pgTable(
@@ -15,6 +16,7 @@ export const alertsTable = pgTable(
     summary: text("summary"),
     category: text("category").notNull().default("general"),
     priority: text("priority").notNull().default("normal"),
+    importanceScore: integer("importance_score").notNull().default(5),
     sourceName: text("source_name").notNull(),
     sourceUrl: text("source_url").notNull(),
     publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),

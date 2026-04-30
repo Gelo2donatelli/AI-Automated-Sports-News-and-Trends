@@ -220,6 +220,75 @@ function prioritize(category: string, headline: string, summary?: string): strin
   return "normal";
 }
 
+// ---------------------------------------------------------------------------
+// Importance scoring — numeric 1-10 for filtering/ranking
+// ---------------------------------------------------------------------------
+
+const KEYWORD_SCORES: { pattern: RegExp; score: number }[] = [
+  // Score 10 — hardest stops / bans / season-enders
+  { pattern: /\b(breaking|alert|just in)\b/i, score: 10 },
+  { pattern: /\b(suspended indefinitely|arrested|banned for life|lifetime ban|criminally charged)\b/i, score: 10 },
+  { pattern: /\b(fired|dismissed|terminated)\b/i, score: 10 },
+  { pattern: /\b(out for season|season[- ]ending|torn acl|torn mcl|torn achilles|placed on ir)\b/i, score: 10 },
+
+  // Score 9 — major transaction / game-changing events
+  { pattern: /\b(traded|trade\s+deadline|acquired|signed\s+(a\s+)?(max|multi[- ]year)|re[- ]signed\s+(to|for))\b/i, score: 9 },
+  { pattern: /\b(ruled out|will not play|won'?t play|did not dress)\b/i, score: 9 },
+  { pattern: /\b(overtime|ot\b|final score|final:?\s*\d|walk[- ]off|buzzer[- ]beater|no[- ]hitter|perfect game)\b/i, score: 9 },
+  { pattern: /\b(hired|named head coach|named manager|new head coach)\b/i, score: 9 },
+  { pattern: /\b(suspended\s+\d+|suspended for)\b/i, score: 9 },
+
+  // Score 8 — high-value status / roster moves
+  { pattern: /\b(questionable|doubtful|game[- ]time decision|day[- ]to[- ]day)\b/i, score: 8 },
+  { pattern: /\b(injured|injury)\b/i, score: 8 },
+  { pattern: /\b(inactive|active\s+list|designated\s+for\s+assignment|dfa\b|waived|released|cut\s+(by|from))\b/i, score: 8 },
+  { pattern: /\b(acquired|extension|contract\s+(extension|deal)|multi[- ]year\s+deal)\b/i, score: 8 },
+  { pattern: /\b(signed|signing)\b/i, score: 8 },
+
+  // Score 7 — notable depth-chart / lineup shifts
+  { pattern: /\b(starting|named\s+starter|starter|lineup\s+change|depth\s+chart)\b/i, score: 7 },
+  { pattern: /\b(benched|demoted|promoted|moved\s+to\s+(ir|dl|il|bullpen|rotation))\b/i, score: 7 },
+  { pattern: /\b(trade\s+rumors?|trade\s+talks?|trade\s+interest)\b/i, score: 7 },
+];
+
+// Base scores driven by existing category/priority classifications
+const PRIORITY_BASE: Record<string, number> = {
+  breaking: 9,
+  high: 7,
+  normal: 5,
+  low: 2,
+};
+
+const CATEGORY_BONUS: Record<string, number> = {
+  disciplinary: 2,
+  injury_report: 1,
+  transaction: 1,
+  coaching_update: 1,
+};
+
+function scoreAlert(
+  priority: string,
+  category: string,
+  headline: string,
+  summary?: string,
+): number {
+  const text = `${headline} ${summary ?? ""}`;
+
+  let maxKeyword = 0;
+  for (const { pattern, score } of KEYWORD_SCORES) {
+    if (pattern.test(text)) {
+      maxKeyword = Math.max(maxKeyword, score);
+      if (maxKeyword === 10) break;
+    }
+  }
+
+  const base = PRIORITY_BASE[priority] ?? 5;
+  const bonus = CATEGORY_BONUS[category] ?? 0;
+  const fromPriority = Math.min(10, base + bonus);
+
+  return Math.min(10, Math.max(maxKeyword, fromPriority));
+}
+
 function makeAlertId(sourceUrl: string): string {
   return createHash("sha1").update(sourceUrl).digest("hex").slice(0, 24);
 }
@@ -272,6 +341,7 @@ async function fetchAndStoreForTeam(
     const summary = item.description;
     const category = categorize(headline, summary);
     const priority = prioritize(category, headline, summary);
+    const importanceScore = scoreAlert(priority, category, headline, summary);
     return {
       id: makeAlertId(item.link),
       teamId,
@@ -279,6 +349,7 @@ async function fetchAndStoreForTeam(
       summary: summary ?? null,
       category,
       priority,
+      importanceScore,
       sourceName: item.source ?? "Yardbarker",
       sourceUrl: item.link,
       publishedAt: parsePubDate(item.pubDate),
@@ -290,10 +361,11 @@ async function fetchAndStoreForTeam(
     .values(rows)
     .onConflictDoUpdate({
       target: alertsTable.sourceUrl,
-      // Re-score category & priority on re-fetch so improved logic takes effect immediately
+      // Re-score on re-fetch so improved logic takes effect immediately
       set: {
         category: sql`excluded.category`,
         priority: sql`excluded.priority`,
+        importanceScore: sql`excluded.importance_score`,
       },
     })
     .returning({ id: alertsTable.id });

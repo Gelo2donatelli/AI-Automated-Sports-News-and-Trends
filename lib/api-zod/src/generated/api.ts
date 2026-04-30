@@ -89,9 +89,19 @@ export const ListAlertsQueryParams = zod.object({
   search: zod.coerce.string().optional(),
 });
 
+export const listAlertsResponseImportanceScoreMax = 10;
+
 export const ListAlertsResponseItem = zod.object({
   id: zod.string(),
   sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
+  importanceScore: zod
+    .number()
+    .min(1)
+    .max(listAlertsResponseImportanceScoreMax)
+    .optional()
+    .describe(
+      "Numeric importance score 1-10; alerts scoring 8+ are breaking-tier",
+    ),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -119,9 +129,19 @@ export const GetAlertParams = zod.object({
   alertId: zod.coerce.string(),
 });
 
+export const getAlertResponseImportanceScoreMax = 10;
+
 export const GetAlertResponse = zod.object({
   id: zod.string(),
   sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
+  importanceScore: zod
+    .number()
+    .min(1)
+    .max(getAlertResponseImportanceScoreMax)
+    .optional()
+    .describe(
+      "Numeric importance score 1-10; alerts scoring 8+ are breaking-tier",
+    ),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -168,9 +188,19 @@ export const GetAlertFeedQueryParams = zod.object({
     ),
 });
 
+export const getAlertFeedResponseImportanceScoreMax = 10;
+
 export const GetAlertFeedResponseItem = zod.object({
   id: zod.string(),
   sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
+  importanceScore: zod
+    .number()
+    .min(1)
+    .max(getAlertFeedResponseImportanceScoreMax)
+    .optional()
+    .describe(
+      "Numeric importance score 1-10; alerts scoring 8+ are breaking-tier",
+    ),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -204,9 +234,19 @@ export const GetBreakingAlertsQueryParams = zod.object({
   limit: zod.coerce.number().default(getBreakingAlertsQueryLimitDefault),
 });
 
+export const getBreakingAlertsResponseImportanceScoreMax = 10;
+
 export const GetBreakingAlertsResponseItem = zod.object({
   id: zod.string(),
   sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
+  importanceScore: zod
+    .number()
+    .min(1)
+    .max(getBreakingAlertsResponseImportanceScoreMax)
+    .optional()
+    .describe(
+      "Numeric importance score 1-10; alerts scoring 8+ are breaking-tier",
+    ),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -240,6 +280,8 @@ export const GetAlertsByTeamQueryParams = zod.object({
     .default(getAlertsByTeamQueryLimitPerTeamDefault),
 });
 
+export const getAlertsByTeamResponseAlertsItemImportanceScoreMax = 10;
+
 export const GetAlertsByTeamResponseItem = zod.object({
   team: zod.object({
     id: zod.string(),
@@ -259,6 +301,14 @@ export const GetAlertsByTeamResponseItem = zod.object({
     zod.object({
       id: zod.string(),
       sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
+      importanceScore: zod
+        .number()
+        .min(1)
+        .max(getAlertsByTeamResponseAlertsItemImportanceScoreMax)
+        .optional()
+        .describe(
+          "Numeric importance score 1-10; alerts scoring 8+ are breaking-tier",
+        ),
       teamId: zod.string(),
       teamName: zod.string(),
       teamCity: zod.string(),

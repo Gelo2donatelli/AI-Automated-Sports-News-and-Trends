@@ -426,6 +426,11 @@ components:
         sport:
           type: string
           description: nfl, mlb, nba, ncaaf, golf
+        importanceScore:
+          type: integer
+          description: Numeric importance score 1-10; alerts scoring 8+ are breaking-tier
+          minimum: 1
+          maximum: 10
         teamId:
           type: string
         teamName:
