@@ -17,11 +17,11 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={Breaking} />
+      <Route path="/feed" component={Home} />
       <Route path="/teams" component={Teams} />
       <Route path="/teams/:teamId" component={TeamDetail} />
       <Route path="/alerts/:alertId" component={AlertDetail} />
-      <Route path="/breaking" component={Breaking} />
       <Route path="/analyst" component={Analyst} />
       <Route path="/preferences" component={Preferences} />
       <Route component={NotFound} />

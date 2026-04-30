@@ -11,8 +11,8 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
 
   const navigation = [
-    { name: "Live Feed", href: "/", icon: Rss },
-    { name: "Breaking", href: "/breaking", icon: Zap },
+    { name: "Breaking", href: "/", icon: Zap },
+    { name: "Live Feed", href: "/feed", icon: Rss },
     { name: "Analyst", href: "/analyst", icon: Brain },
     { name: "Teams", href: "/teams", icon: Users },
     { name: "Preferences", href: "/preferences", icon: Settings },
