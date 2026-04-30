@@ -399,11 +399,100 @@ const CATEGORY_BONUS: Record<string, number> = {
   game_result: 0,
 };
 
+// ---------------------------------------------------------------------------
+// Source credibility tiers
+// ---------------------------------------------------------------------------
+//
+// Tier 1 — Official / verified premier outlets  → no score cap
+// Tier 2 — Major national sports media          → no score cap
+// Tier 3 — Blogs, opinion sites, aggregators    → importanceScore capped at 7
+//           (never promoted to Breaking ticker which requires >= 8)
+//
+// Tier is derived from the article URL domain so we don't need a DB column.
+// ---------------------------------------------------------------------------
+
+const TIER1_DOMAINS = new Set([
+  // Official league / team properties
+  "nfl.com", "nba.com", "mlb.com", "nhl.com", "ncaa.com", "pgatour.com",
+  "wnba.com", "mls.com", "ufc.com",
+  // ESPN (all subdomains resolve here)
+  "espn.com", "espnfc.com",
+]);
+
+const TIER2_DOMAINS = new Set([
+  "cbssports.com",
+  "foxsports.com",
+  "nbcsports.com",
+  "profootballtalk.nbcsports.com",
+  "theathletic.com",
+  "si.com",           // Sports Illustrated
+  "sportingnews.com",
+  "bleacherreport.com",
+  "yardbarker.com",
+  "usatoday.com",
+  "nypost.com",
+  "washingtonpost.com",
+  "nytimes.com",
+  "reuters.com",
+  "apnews.com",
+  "sportsnet.ca",     // Canadian hockey
+  "tsn.ca",
+  "thescore.com",
+]);
+
+/** Returns 1, 2, or 3 for the given article URL / source name. */
+function getSourceTier(articleUrl: string, sourceName: string): 1 | 2 | 3 {
+  // Try to extract hostname from the article link
+  let host = "";
+  try {
+    host = new URL(articleUrl).hostname.replace(/^www\./, "");
+  } catch {
+    // fall through to source-name matching
+  }
+
+  if (host && TIER1_DOMAINS.has(host)) return 1;
+  if (host && TIER2_DOMAINS.has(host)) return 2;
+
+  // Some feeds have subdomains — check if host ends with a known domain
+  for (const d of TIER1_DOMAINS) {
+    if (host.endsWith(`.${d}`) || host === d) return 1;
+  }
+  for (const d of TIER2_DOMAINS) {
+    if (host.endsWith(`.${d}`) || host === d) return 2;
+  }
+
+  // Fallback: check source name for known outlets
+  const sn = sourceName.toLowerCase();
+  if (sn.includes("espn")) return 1;
+  if (sn.includes("nfl.com") || sn.includes("nba.com") || sn.includes("mlb.com") || sn.includes("nhl.com")) return 1;
+  if (
+    sn.includes("cbs") || sn.includes("fox sports") || sn.includes("nbc sports") ||
+    sn.includes("pro football talk") || sn.includes("the athletic") ||
+    sn.includes("sports illustrated") || sn.includes("bleacher report") ||
+    sn.includes("yardbarker") || sn.includes("sporting news") ||
+    sn.includes("usa today") || sn.includes("ap news") || sn.includes("reuters") ||
+    sn.includes("new york post") || sn.includes("washington post")
+  ) return 2;
+
+  return 3;
+}
+
+// Maximum importanceScore each tier may achieve.
+// Tier 3 is capped below the Breaking threshold (8) so unconfirmed blog
+// reports can never appear in the breaking ticker.
+const TIER_SCORE_CAP: Record<1 | 2 | 3, number> = {
+  1: 10,
+  2: 10,
+  3: 7,
+};
+
 function scoreAlert(
   priority: string,
   category: string,
   headline: string,
-  summary?: string,
+  summary: string | undefined,
+  articleUrl: string,
+  sourceName: string,
 ): number {
   // Noise is unconditionally pinned low — keywords can't rescue gossip/opinions
   if (priority === "low") return 1;
@@ -422,7 +511,11 @@ function scoreAlert(
   const bonus = CATEGORY_BONUS[category] ?? 0;
   const fromPriority = Math.min(10, base + bonus);
 
-  return Math.min(10, Math.max(maxKeyword, fromPriority));
+  const rawScore = Math.min(10, Math.max(maxKeyword, fromPriority));
+
+  // Apply source-credibility cap — Tier 3 articles never reach Breaking tier
+  const tier = getSourceTier(articleUrl, sourceName);
+  return Math.min(rawScore, TIER_SCORE_CAP[tier]);
 }
 
 function makeAlertId(sourceUrl: string): string {
@@ -477,7 +570,8 @@ async function fetchAndStoreForTeam(
     const summary = item.description;
     const category = categorize(headline, summary);
     const priority = prioritize(category, headline, summary);
-    const importanceScore = scoreAlert(priority, category, headline, summary);
+    const sourceName = item.source ?? "Yardbarker";
+    const importanceScore = scoreAlert(priority, category, headline, summary, item.link, sourceName);
     return {
       id: makeAlertId(item.link),
       teamId,
@@ -486,7 +580,7 @@ async function fetchAndStoreForTeam(
       category,
       priority,
       importanceScore,
-      sourceName: item.source ?? "Yardbarker",
+      sourceName,
       sourceUrl: item.link,
       publishedAt: parsePubDate(item.pubDate),
     };

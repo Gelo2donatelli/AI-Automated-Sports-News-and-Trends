@@ -15,7 +15,63 @@ import {
   FileText,
   Trophy,
   ListOrdered,
+  ShieldCheck,
+  Newspaper,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// Source credibility tiers — mirrors the server classification in news-fetcher.ts
+// ---------------------------------------------------------------------------
+const TIER1_HOSTS = new Set([
+  "nfl.com", "nba.com", "mlb.com", "nhl.com", "ncaa.com", "pgatour.com",
+  "wnba.com", "mls.com", "ufc.com", "espn.com", "espnfc.com",
+]);
+const TIER2_HOSTS = new Set([
+  "cbssports.com", "foxsports.com", "nbcsports.com",
+  "profootballtalk.nbcsports.com", "theathletic.com", "si.com",
+  "sportingnews.com", "bleacherreport.com", "yardbarker.com",
+  "usatoday.com", "nypost.com", "washingtonpost.com",
+  "nytimes.com", "reuters.com", "apnews.com", "sportsnet.ca",
+  "tsn.ca", "thescore.com",
+]);
+
+function getSourceTier(sourceUrl: string, sourceName: string): 1 | 2 | 3 {
+  let host = "";
+  try { host = new URL(sourceUrl).hostname.replace(/^www\./, ""); } catch { /* noop */ }
+  if (host) {
+    if (TIER1_HOSTS.has(host) || [...TIER1_HOSTS].some(d => host.endsWith(`.${d}`))) return 1;
+    if (TIER2_HOSTS.has(host) || [...TIER2_HOSTS].some(d => host.endsWith(`.${d}`))) return 2;
+  }
+  const sn = sourceName.toLowerCase();
+  if (sn.includes("espn") || sn.includes("nfl.com") || sn.includes("nba.com")) return 1;
+  if (sn.includes("cbs") || sn.includes("fox sports") || sn.includes("nbc sports") ||
+    sn.includes("pro football talk") || sn.includes("the athletic") ||
+    sn.includes("yardbarker") || sn.includes("sporting news")) return 2;
+  return 3;
+}
+
+const TIER_META: Record<1 | 2 | 3, { label: string; icon: React.ElementType; className: string; title: string }> = {
+  1: {
+    label: "VERIFIED",
+    icon: ShieldCheck,
+    className: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+    title: "Tier 1 — Official or major verified outlet",
+  },
+  2: {
+    label: "TRUSTED",
+    icon: Newspaper,
+    className: "text-sky-400 bg-sky-500/10 border-sky-500/30",
+    title: "Tier 2 — Major national sports media",
+  },
+  3: {
+    label: "UNVERIFIED",
+    icon: Globe,
+    className: "text-amber-400 bg-amber-500/10 border-amber-500/30",
+    title: "Tier 3 — Blog or aggregator · Breaking withheld until confirmed",
+  },
+};
 
 interface AlertCardProps {
   alert: Alert;
@@ -91,6 +147,9 @@ export function AlertCard({ alert, index = 0 }: AlertCardProps) {
   const isHigh = alert.priority === "high";
   const catMeta = CATEGORY_META[alert.category ?? "general"] ?? CATEGORY_META.general;
   const CatIcon = catMeta.icon;
+  const tier = getSourceTier(alert.sourceUrl ?? "", alert.sourceName ?? "");
+  const tierMeta = TIER_META[tier];
+  const TierIcon = tierMeta.icon;
 
   return (
     <motion.div
@@ -191,6 +250,30 @@ export function AlertCard({ alert, index = 0 }: AlertCardProps) {
           {alert.summary && (
             <p className="text-sm text-muted-foreground line-clamp-2">{alert.summary}</p>
           )}
+
+          {/* Source credibility footer */}
+          <div className="mt-2.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button
+                type="button"
+                onClick={e => { e.preventDefault(); e.stopPropagation(); if (alert.sourceUrl) window.open(alert.sourceUrl, "_blank", "noopener,noreferrer"); }}
+                className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors truncate max-w-[200px] cursor-pointer"
+              >
+                <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                {alert.sourceName ?? "Unknown"}
+              </button>
+            </div>
+            <span
+              title={tierMeta.title}
+              className={cn(
+                "flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0",
+                tierMeta.className,
+              )}
+            >
+              <TierIcon className="h-2.5 w-2.5" />
+              {tierMeta.label}
+            </span>
+          </div>
 
           {/* Fantasy/betting signal footer for high-value items */}
           {(isBreaking || isHigh) &&
