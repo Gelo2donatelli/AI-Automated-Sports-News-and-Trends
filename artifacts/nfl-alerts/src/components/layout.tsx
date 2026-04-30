@@ -1,7 +1,6 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, Activity, Users, Settings, Rss, Brain, Menu, X, LogIn, UserPlus } from "lucide-react";
-import { useUser } from "@clerk/react";
+import { Zap, Activity, Users, Settings, Rss, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SportTabs } from "./sport-tabs";
 import { UserMenu } from "./user-menu";
@@ -12,8 +11,6 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { isSignedIn, isLoaded } = useUser();
 
   const navigation = [
     { name: "Breaking", href: "/", icon: Zap },
@@ -29,103 +26,47 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
-        <div className="container mx-auto flex h-14 items-center px-4">
-          {/* Logo */}
+        {/* Top bar: logo + auth */}
+        <div className="container mx-auto flex h-12 items-center px-4">
           <Link
             href="/"
             className="flex items-center gap-2 font-mono font-bold tracking-tighter text-lg hover:text-primary transition-colors"
-            onClick={() => setMobileOpen(false)}
           >
             <Activity className="h-5 w-5 text-primary" />
             <span>
               PRESSBOX<span className="text-primary">WIRE</span>
             </span>
           </Link>
-
-          {/* Desktop nav */}
-          <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2 transition-colors hover:text-foreground",
-                  isActive(item.href) ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                <item.icon className={cn("h-4 w-4", isActive(item.href) && "text-primary")} />
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-4 hidden md:block">
+          <div className="ml-auto">
             <UserMenu />
-          </div>
-
-          {/* Mobile: just the hamburger + compact signed-in avatar */}
-          <div className="ml-auto flex items-center gap-2 md:hidden">
-            {/* Only show avatar (not the two-button row) when signed in */}
-            {isLoaded && isSignedIn && <UserMenu />}
-            <button
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              onClick={() => setMobileOpen((v) => !v)}
-              className="flex items-center justify-center h-9 w-9 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
 
-        {/* Mobile dropdown nav */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-border bg-card/95 backdrop-blur-xl">
-            <nav className="container mx-auto px-4 py-2 flex flex-col">
-              {navigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 py-3.5 text-sm font-medium border-b border-border/50 transition-colors",
-                    isActive(item.href)
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <item.icon
-                    className={cn("h-4 w-4 shrink-0", isActive(item.href) && "text-primary")}
-                  />
-                  <span>{item.name}</span>
-                  {isActive(item.href) && (
-                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                  )}
-                </Link>
-              ))}
-
-              {/* Auth actions inside dropdown for signed-out users */}
-              {isLoaded && !isSignedIn && (
-                <div className="flex gap-3 pt-3 pb-1">
+        {/* Nav tab bar — scrollable on mobile, comfortable on desktop */}
+        <div className="border-t border-border/60 bg-card/50">
+          <div className="container mx-auto px-2">
+            <div className="flex items-center overflow-x-auto scrollbar-none">
+              {navigation.map((item) => {
+                const active = isActive(item.href);
+                return (
                   <Link
-                    href="/sign-in"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md border border-border text-sm font-mono font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-xs font-mono font-bold uppercase tracking-wider border-b-2 transition-colors shrink-0",
+                      active
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
+                    )}
                   >
-                    <LogIn className="h-4 w-4" />
-                    Sign In
+                    <item.icon className={cn("h-3.5 w-3.5", active && "text-primary")} />
+                    {item.name}
                   </Link>
-                  <Link
-                    href="/sign-up"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-mono font-bold hover:bg-primary/90 transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Join Free
-                  </Link>
-                </div>
-              )}
-            </nav>
+                );
+              })}
+            </div>
           </div>
-        )}
+        </div>
 
         <SportTabs />
       </header>
