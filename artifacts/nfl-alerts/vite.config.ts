@@ -28,9 +28,15 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
+  define: {
+    // Expose the Clerk publishable key (server-side secret) to the browser bundle
+    "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(
+      process.env.VITE_CLERK_PUBLISHABLE_KEY ?? process.env.CLERK_PUBLISHABLE_KEY ?? "",
+    ),
+  },
   plugins: [
     react(),
-    tailwindcss(),
+    tailwindcss({ optimize: false }),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined

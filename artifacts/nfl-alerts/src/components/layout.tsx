@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Zap, Activity, Users, Settings, Rss, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SportTabs } from "./sport-tabs";
+import { UserMenu } from "./user-menu";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,7 +29,7 @@ export function Layout({ children }: LayoutProps) {
             <span>PRESSBOX<span className="text-primary">WIRE</span></span>
           </Link>
 
-          <nav className="ml-auto hidden md:flex items-center gap-6 text-sm font-medium">
+          <nav className="ml-auto hidden md:flex items-center gap-4 text-sm font-medium">
             {navigation.map((item) => {
               const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
               return (
@@ -46,6 +47,9 @@ export function Layout({ children }: LayoutProps) {
               );
             })}
           </nav>
+          <div className="ml-4 hidden md:block">
+            <UserMenu />
+          </div>
         </div>
         <SportTabs />
       </header>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { useClientId } from "@/hooks/use-client-id";
 import { useGetPreferences, useUpdatePreferences, useListTeams } from "@workspace/api-client-react";
@@ -9,8 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { TeamBadge } from "@/components/team-badge";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, UserPlus, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/react";
 import { useSport } from "@/hooks/use-sport";
 
 const CATEGORIES = [
@@ -29,6 +31,7 @@ const SPORT_ORDER: Record<string, number> = { nfl: 0, mlb: 1, nba: 2 };
 
 export default function Preferences() {
   const clientId = useClientId();
+  const { isSignedIn } = useUser();
   const { toast } = useToast();
   
   const { sportParam } = useSport();
@@ -109,10 +112,31 @@ export default function Preferences() {
             <Settings className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight uppercase">Terminal Preferences</h1>
+            <h1 className="text-3xl font-bold tracking-tight uppercase">Preferences</h1>
             <p className="text-muted-foreground text-sm font-mono mt-1">Configure your alert feeds and filters</p>
           </div>
         </div>
+
+        {!isSignedIn && (
+          <div className="flex items-start gap-4 rounded-md border border-primary/30 bg-primary/5 p-4">
+            <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">Save across devices with a free account</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Your preferences are stored locally. Create a free account to sync them everywhere and unlock future premium features.</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link href="/sign-in">
+                <Button variant="ghost" size="sm" className="font-mono text-xs">Sign In</Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button size="sm" className="font-mono text-xs">
+                  <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                  Join Free
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {!isLoaded ? (
           <div className="space-y-6">
