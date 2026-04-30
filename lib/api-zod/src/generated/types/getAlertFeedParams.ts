@@ -16,4 +16,8 @@ export type GetAlertFeedParams = {
    * Filter by sport (nfl, mlb, nba). Omit for all sports.
    */
   sport?: string;
+  /**
+   * Include low-priority noise items (default false — noise is excluded).
+   */
+  showAll?: boolean;
 };

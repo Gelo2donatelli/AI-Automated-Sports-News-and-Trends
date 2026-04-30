@@ -165,6 +165,12 @@ paths:
           schema:
             type: string
           description: Filter by sport (nfl, mlb, nba). Omit for all sports.
+        - name: showAll
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Include low-priority noise items (default false — noise is excluded).
       responses:
         "200":
           description: Feed

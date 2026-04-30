@@ -154,6 +154,12 @@ export const GetAlertFeedQueryParams = zod.object({
     .string()
     .optional()
     .describe("Filter by sport (nfl, mlb, nba). Omit for all sports."),
+  showAll: zod.coerce
+    .boolean()
+    .optional()
+    .describe(
+      "Include low-priority noise items (default false — noise is excluded).",
+    ),
 });
 
 export const GetAlertFeedResponseItem = zod.object({

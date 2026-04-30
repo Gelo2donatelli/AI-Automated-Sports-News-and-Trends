@@ -75,6 +75,54 @@ function parseRss(xml: string): ParsedItem[] {
   return items;
 }
 
+/**
+ * Detect noise / low-value content: media drama, opinion pieces, gossip,
+ * social-media clashes, speculative rankings, etc.
+ * These should never crowd out actionable sports intelligence.
+ */
+function isNoise(headline: string, summary?: string): boolean {
+  const h = headline.toLowerCase();
+  const text = `${h} ${(summary ?? "").toLowerCase()}`;
+
+  // Media drama: reporter/personality disputes, "responds to", "calls out", etc.
+  if (
+    /\b(responds?\s+to|react(s|ed|ing)?\s+to|fires?\s+back|claps?\s+back|calls?\s+out|takes?\s+(a\s+)?shot\s+at|slams?\s+|blasts?\s+|rips?\s+|ripping\s+|weigh(s|ed|ing)?\s+in\s+on|sound(s|ed|ing)?\s+off|chimes?\s+in|speaks?\s+out\s+against|defends?\s+(himself|herself|themselves|his|her|their)|pushes?\s+back\s+on|takes?\s+(aim|issue)\s+(at|with))\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // Opinion / ranking content — not actionable
+  if (
+    /\b(power rankings?|mock draft|report card|hot take[s]?|mailbag|the\s+case\s+for|why\s+the\s+\w+\s+should|here'?s?\s+why|opinion:|column:|commentary:|fantasy advice|dfs advice)\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // Social-media & gossip hooks
+  if (
+    /\b(tweets?|instagram\s+post|tiktok|social media\s+(post|backlash|reaction)|goes?\s+viral|viral\s+moment|beef\s+with|feud\s+(between|with)|drama\s+(between|over)|disparag|diss\b|name[- ]calling|clapping\s+back)\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // Media personality-centric stories (reporter opinions on another person's words)
+  if (
+    /\b(disparaging\s+comment|critical\s+comment|insults?\s+(from|by)|responded?\s+to\s+(criticism|comments?|claims?|report|dig|jab|shot|accusation))\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function categorize(headline: string, summary?: string): string {
   const text = `${headline} ${summary ?? ""}`.toLowerCase();
 
@@ -87,18 +135,45 @@ function categorize(headline: string, summary?: string): string {
     return "coaching_update";
   }
 
-  // Player-centric: injuries, performance, trades, signings, depth chart, sport-specific stats
+  // Injury-specific — surfaced before general player_update for clearer filtering
   if (
-    /\b(injur|injured|hurt|out for season|tear|torn|sprain|concussion|knee|hamstring|ankle|shoulder|elbow|achilles|surgery|placed on ir|ir designat|reserve\/injured|injured list|il \b|10[- ]day il|15[- ]day il|60[- ]day il|day[- ]to[- ]day|questionable|doubtful|ruled out|sidelined|did not practice|dnp|trade[ds]?|trading|acquired|acquire|sign(ed|s|ing)?|contract|extension|free agent|re-signed|resigned|suspended|suspension|fined|arrest|charged|starter|starting|benched|demoted|promoted|inactive|depth chart|qb1|rb1|wr1|backup|named starter|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|fantasy|prop|home run|hr|grand slam|rbi|strikeout|no-hitter|complete game|era|batting average|on-base|slugging|stolen base|saves|closer|reliever|setup man|three-pointer|3-pointer|triple-double|double-double|points|rebound|assist|blocks|steal|dunk|buzzer beater|playoff bracket|first round pick)\b/.test(
+    /\b(injur|injured|hurt|out for season|tear|torn|sprain|fracture|concussion|knee|hamstring|ankle|shoulder|elbow|achilles|surgery|placed on ir|ir designat|reserve\/injured|injured list|il \b|10[- ]day il|15[- ]day il|60[- ]day il|day[- ]to[- ]day|questionable|doubtful|ruled out|sidelined|did not practice|dnp|non-contact|limited practice|full practice|pes list|suspended without pay)\b/.test(
+      text,
+    )
+  ) {
+    return "injury_report";
+  }
+
+  // Transactions: trades, signings, contract moves — high fantasy/betting value
+  if (
+    /\b(trade[ds]?|trading|traded to|acquired|acquire|signed?\s+(with|to|a|for|new)|re-signs?|re-signed|signing\s+(with|a)|signs\s+(with|to)|free\s+agent|contract\s+extension|contract\s+deal|extension|waived|released|cut\s+(by|from)|designated\s+for\s+assignment|dfa|claimed\s+off|waiver\s+claim|buyout|opted?\s+out|player\s+option|contract\s+restructured)\b/.test(
+      text,
+    )
+  ) {
+    return "transaction";
+  }
+
+  // Player performance / stats / depth chart — fantasy/betting signal
+  if (
+    /\b(starter|starting|named starter|benched|demoted|promoted|inactive|active|depth chart|qb1|rb1|wr1|backup|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|career high|home run|hr|grand slam|rbi|strikeout|no-hitter|complete game|era|batting average|on-base|slugging|stolen base|saves|closer|three-pointer|3-pointer|triple-double|double-double|points per game|rebound|assist|blocks|steal|buzzer beater|playoff clinch|first round pick|lottery pick)\b/.test(
       text,
     )
   ) {
     return "player_update";
   }
 
-  // Team-level: front office, results, season trends, standings/playoff implications
+  // Roster / team-level moves with betting/fantasy implications
   if (
-    /\b(team|franchise|roster|defense|offense|special teams|rotation|bullpen|lineup|rank(ed|ing|s)?|standings|division|wild ?card|seed|record|win streak|losing streak|loss|won|beat|defeated|matchup|against|scheme|game ?plan|schedule|bye week|practice squad|cap space|salary cap|luxury tax|gm |general manager|owner|stadium|ballpark|arena|draft pick|prospect|farm system|minor league|two-way contract|g[- ]league|series|sweep|playoff)\b/.test(
+    /\b(suspension|suspended|fined|arrest|charged|arrested|convicted|banned|reinstated|appeal)\b/.test(
+      text,
+    )
+  ) {
+    return "disciplinary";
+  }
+
+  // Team-level: results, standings, cap, roster strategy
+  if (
+    /\b(team|franchise|roster|defense|offense|special teams|rotation|bullpen|lineup|standings|division|wild ?card|seed|record|win streak|losing streak|won|beat|defeated|cap space|salary cap|luxury tax|gm |general manager|owner|stadium|draft pick|prospect|farm system|minor league|two-way contract|series|sweep|playoff)\b/.test(
       text,
     )
   ) {
@@ -108,24 +183,40 @@ function categorize(headline: string, summary?: string): string {
   return "general";
 }
 
-function prioritize(category: string, headline: string): string {
+function prioritize(category: string, headline: string, summary?: string): string {
+  // Check for low-value noise FIRST — no amount of keywords rescues gossip
+  if (isNoise(headline, summary)) return "low";
+
   const text = headline.toLowerCase();
+
+  // True breaking news: major transactions, season-ending events, firings/hirings
   if (
-    /\b(breaking|alert|just in|trade[ds]?|out for season|torn acl|suspended|arrest|placed on ir|ir designated|will miss|ruled out|fired|hired)\b/.test(
+    /\b(breaking|alert|just in|out for season|torn acl|torn mcl|season[- ]ending|will miss (the )?(rest|remainder)|placed on ir|ir designated|traded to|signs? (with|a)|re[- ]signs?|waived|released|fired|hired|arrested|suspended indefinitely)\b/.test(
       text,
     )
   ) {
     return "breaking";
   }
+
+  // High-value for fantasy & betting: injury status, lineup changes, transactions, discipline
   if (
-    category === "player_update" ||
+    category === "injury_report" ||
+    category === "transaction" ||
+    category === "disciplinary" ||
     category === "coaching_update" ||
-    /\b(start|named|won't play|wont play|inactive|active|game-time decision|questionable|doubtful)\b/.test(
+    /\b(questionable|doubtful|ruled out|game[- ]time decision|inactive|active|named starter|won'?t play|wont play|did not practice|limited|full practice|day[- ]to[- ]day|suspended|fined|benched|demoted|promoted|depth chart)\b/.test(
       text,
     )
   ) {
     return "high";
   }
+
+  // Player updates with clear stats/performance signal
+  if (category === "player_update") {
+    return "normal";
+  }
+
+  // General / team updates — standard feed content
   return "normal";
 }
 
@@ -178,7 +269,7 @@ async function fetchAndStoreForTeam(
     const headline = item.title;
     const summary = item.description;
     const category = categorize(headline, summary);
-    const priority = prioritize(category, headline);
+    const priority = prioritize(category, headline, summary);
     return {
       id: makeAlertId(item.link),
       teamId,
@@ -195,7 +286,14 @@ async function fetchAndStoreForTeam(
   const result = await db
     .insert(alertsTable)
     .values(rows)
-    .onConflictDoNothing({ target: alertsTable.sourceUrl })
+    .onConflictDoUpdate({
+      target: alertsTable.sourceUrl,
+      // Re-score category & priority on re-fetch so improved logic takes effect immediately
+      set: {
+        category: sql`excluded.category`,
+        priority: sql`excluded.priority`,
+      },
+    })
     .returning({ id: alertsTable.id });
 
   return result.length;

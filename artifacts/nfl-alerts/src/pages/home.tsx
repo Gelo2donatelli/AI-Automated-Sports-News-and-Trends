@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Activity, Flame, ShieldAlert, ArrowRight, Brain } from "lucide-react";
+import { Activity, Flame, ShieldAlert, ArrowRight, Brain, Zap, ListFilter } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Layout } from "@/components/layout";
 import { AlertCard } from "@/components/alert-card";
 import { InsightCard } from "@/components/insight-card";
@@ -23,6 +24,7 @@ import { motion } from "framer-motion";
 export default function Home() {
   const clientId = useClientId();
   const [feedMode, setFeedMode] = useState<"all" | "following">("all");
+  const [showAll, setShowAll] = useState(false);
   const { sport, sportParam } = useSport();
 
   const { data: stats, isLoading: isStatsLoading } = useGetOverviewStats();
@@ -38,8 +40,8 @@ export default function Home() {
     : undefined;
 
   const { data: feed, isLoading: isFeedLoading } = useGetAlertFeed(
-    { teamIds: teamIdsFilter, limit: 50, sport: sportParam },
-    { query: { refetchInterval: 30000 } } // Auto-poll every 30s
+    { teamIds: teamIdsFilter, limit: 50, sport: sportParam, showAll },
+    { query: { refetchInterval: 30000 } }
   );
 
   const { data: trending, isLoading: isTrendingLoading } = useGetTrendingTeams({ limit: 5, sport: sportParam });
@@ -65,7 +67,7 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 flex-wrap">
               <Tabs value={feedMode} onValueChange={(v) => setFeedMode(v as any)}>
                 <TabsList>
                   <TabsTrigger value="all">League Wide</TabsTrigger>
@@ -74,6 +76,22 @@ export default function Home() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
+
+              {/* Impact quality filter */}
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition-colors",
+                  showAll
+                    ? "border-border text-muted-foreground hover:text-foreground"
+                    : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20",
+                )}
+                title={showAll ? "Currently showing all news. Click to show high impact only." : "Currently filtering to high-value news only. Click to show all."}
+              >
+                {showAll ? <ListFilter className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
+                {showAll ? "All News" : "High Impact"}
+              </button>
+
               <RefreshButton />
             </div>
           </div>
