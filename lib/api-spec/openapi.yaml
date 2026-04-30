@@ -423,6 +423,9 @@ components:
       properties:
         id:
           type: string
+        sport:
+          type: string
+          description: nfl, mlb, nba, ncaaf, golf
         teamId:
           type: string
         teamName:

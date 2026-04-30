@@ -6,6 +6,8 @@ const SPORT_ACCENT: Record<Sport, string> = {
   nfl: "data-[active=true]:bg-emerald-500 data-[active=true]:text-black",
   mlb: "data-[active=true]:bg-sky-500 data-[active=true]:text-black",
   nba: "data-[active=true]:bg-orange-500 data-[active=true]:text-black",
+  ncaaf: "data-[active=true]:bg-yellow-500 data-[active=true]:text-black",
+  golf: "data-[active=true]:bg-teal-500 data-[active=true]:text-black",
 };
 
 export function SportTabs() {

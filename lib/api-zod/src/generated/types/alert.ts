@@ -8,6 +8,8 @@
 
 export interface Alert {
   id: string;
+  /** nfl, mlb, nba, ncaaf, golf */
+  sport?: string;
   teamId: string;
   teamName: string;
   teamCity: string;

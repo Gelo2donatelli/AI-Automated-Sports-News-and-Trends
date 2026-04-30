@@ -91,6 +91,7 @@ export const ListAlertsQueryParams = zod.object({
 
 export const ListAlertsResponseItem = zod.object({
   id: zod.string(),
+  sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -120,6 +121,7 @@ export const GetAlertParams = zod.object({
 
 export const GetAlertResponse = zod.object({
   id: zod.string(),
+  sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -168,6 +170,7 @@ export const GetAlertFeedQueryParams = zod.object({
 
 export const GetAlertFeedResponseItem = zod.object({
   id: zod.string(),
+  sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -203,6 +206,7 @@ export const GetBreakingAlertsQueryParams = zod.object({
 
 export const GetBreakingAlertsResponseItem = zod.object({
   id: zod.string(),
+  sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
   teamId: zod.string(),
   teamName: zod.string(),
   teamCity: zod.string(),
@@ -254,6 +258,7 @@ export const GetAlertsByTeamResponseItem = zod.object({
   alerts: zod.array(
     zod.object({
       id: zod.string(),
+      sport: zod.string().optional().describe("nfl, mlb, nba, ncaaf, golf"),
       teamId: zod.string(),
       teamName: zod.string(),
       teamCity: zod.string(),
