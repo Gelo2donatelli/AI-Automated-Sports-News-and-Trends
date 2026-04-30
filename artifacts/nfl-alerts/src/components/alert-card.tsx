@@ -24,6 +24,8 @@ const SPORT_PILL: Record<string, string> = {
   nfl: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   mlb: "bg-sky-500/15 text-sky-400 border-sky-500/30",
   nba: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  ncaaf: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  golf: "bg-teal-500/15 text-teal-400 border-teal-500/30",
 };
 
 interface CategoryMeta {

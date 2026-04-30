@@ -13,7 +13,7 @@ export type GetAlertFeedParams = {
   teamIds?: string;
   limit?: number;
   /**
-   * Filter by sport (nfl, mlb, nba). Omit for all sports.
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.
    */
   sport?: string;
   /**

@@ -8,7 +8,7 @@
 
 export type GetTrendingTeamsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   limit?: number;

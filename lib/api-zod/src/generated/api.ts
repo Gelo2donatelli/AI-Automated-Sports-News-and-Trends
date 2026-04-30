@@ -21,7 +21,9 @@ export const ListTeamsQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba). Omit for all sports."),
+    .describe(
+      "Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.",
+    ),
 });
 
 export const ListTeamsResponseItem = zod.object({
@@ -71,7 +73,7 @@ export const ListAlertsQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba)"),
+    .describe("Filter by sport (nfl, mlb, nba, ncaaf, golf)"),
   teamId: zod.coerce.string().optional().describe("Filter by team id"),
   category: zod.coerce
     .string()
@@ -153,7 +155,9 @@ export const GetAlertFeedQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba). Omit for all sports."),
+    .describe(
+      "Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.",
+    ),
   showAll: zod.coerce
     .boolean()
     .optional()
@@ -193,7 +197,7 @@ export const GetBreakingAlertsQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba)"),
+    .describe("Filter by sport (nfl, mlb, nba, ncaaf, golf)"),
   limit: zod.coerce.number().default(getBreakingAlertsQueryLimitDefault),
 });
 
@@ -308,7 +312,7 @@ export const GetTrendingTeamsQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba)"),
+    .describe("Filter by sport (nfl, mlb, nba, ncaaf, golf)"),
   limit: zod.coerce.number().default(getTrendingTeamsQueryLimitDefault),
 });
 
@@ -341,7 +345,7 @@ export const ListInsightsQueryParams = zod.object({
   sport: zod.coerce
     .string()
     .optional()
-    .describe("Filter by sport (nfl, mlb, nba)"),
+    .describe("Filter by sport (nfl, mlb, nba, ncaaf, golf)"),
   teamId: zod.coerce
     .string()
     .optional()

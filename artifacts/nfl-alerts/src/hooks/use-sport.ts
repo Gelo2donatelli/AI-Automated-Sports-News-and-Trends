@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type Sport = "all" | "nfl" | "mlb" | "nba";
+export type Sport = "all" | "nfl" | "mlb" | "nba" | "ncaaf" | "golf";
 
-const SPORTS: Sport[] = ["all", "nfl", "mlb", "nba"];
+const SPORTS: Sport[] = ["all", "nfl", "mlb", "nba", "ncaaf", "golf"];
 const STORAGE_KEY = "pressbox.sport";
 
 function readFromUrl(): Sport | null {
@@ -44,7 +44,7 @@ export function useSport(): {
   sport: Sport;
   setSport: (s: Sport) => void;
   /** Pass to API hooks: undefined when "all" */
-  sportParam: "nfl" | "mlb" | "nba" | undefined;
+  sportParam: "nfl" | "mlb" | "nba" | "ncaaf" | "golf" | undefined;
 } {
   ensureInit();
   const [sport, setSportState] = useState<Sport>(current ?? "all");
@@ -74,7 +74,7 @@ export function useSport(): {
     broadcast(next);
   }, []);
 
-  const sportParam = sport === "all" ? undefined : (sport as "nfl" | "mlb" | "nba");
+  const sportParam = sport === "all" ? undefined : (sport as "nfl" | "mlb" | "nba" | "ncaaf" | "golf");
   return { sport, setSport, sportParam };
 }
 
@@ -83,6 +83,8 @@ export const SPORT_LABELS: Record<Sport, string> = {
   nfl: "NFL",
   mlb: "MLB",
   nba: "NBA",
+  ncaaf: "NCAAF",
+  golf: "Golf",
 };
 
 export const SPORT_LIST: Sport[] = SPORTS;

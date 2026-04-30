@@ -41,7 +41,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba). Omit for all sports.
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.
       responses:
         "200":
           description: Teams list
@@ -82,7 +82,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba)
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf)
         - name: teamId
           in: query
           required: false
@@ -164,7 +164,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba). Omit for all sports.
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.
         - name: showAll
           in: query
           required: false
@@ -192,7 +192,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba)
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf)
         - name: limit
           in: query
           required: false
@@ -268,7 +268,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba)
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf)
         - name: limit
           in: query
           required: false
@@ -296,7 +296,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by sport (nfl, mlb, nba)
+          description: Filter by sport (nfl, mlb, nba, ncaaf, golf)
         - name: teamId
           in: query
           required: false

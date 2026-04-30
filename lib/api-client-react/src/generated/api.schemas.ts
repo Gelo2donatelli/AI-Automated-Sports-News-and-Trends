@@ -120,14 +120,14 @@ export interface PreferencesInput {
 
 export type ListTeamsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba). Omit for all sports.
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.
    */
   sport?: string;
 };
 
 export type ListAlertsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   /**
@@ -153,7 +153,7 @@ export type GetAlertFeedParams = {
   teamIds?: string;
   limit?: number;
   /**
-   * Filter by sport (nfl, mlb, nba). Omit for all sports.
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf). Omit for all sports.
    */
   sport?: string;
   /**
@@ -164,7 +164,7 @@ export type GetAlertFeedParams = {
 
 export type GetBreakingAlertsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   limit?: number;
@@ -176,7 +176,7 @@ export type GetAlertsByTeamParams = {
 
 export type GetTrendingTeamsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   limit?: number;
@@ -184,7 +184,7 @@ export type GetTrendingTeamsParams = {
 
 export type ListInsightsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   /**

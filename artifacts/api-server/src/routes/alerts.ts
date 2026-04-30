@@ -41,7 +41,7 @@ function joinAlertWithTeam(alert: AlertRow, team: TeamRow) {
 function sportFromQuery(q: unknown): string | undefined {
   if (typeof q !== "string") return undefined;
   const s = q.toLowerCase();
-  return s === "nfl" || s === "mlb" || s === "nba" ? s : undefined;
+  return s === "nfl" || s === "mlb" || s === "nba" || s === "ncaaf" || s === "golf" ? s : undefined;
 }
 
 router.get("/alerts", async (req, res): Promise<void> => {

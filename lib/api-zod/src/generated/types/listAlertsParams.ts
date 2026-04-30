@@ -8,7 +8,7 @@
 
 export type ListAlertsParams = {
   /**
-   * Filter by sport (nfl, mlb, nba)
+   * Filter by sport (nfl, mlb, nba, ncaaf, golf)
    */
   sport?: string;
   /**

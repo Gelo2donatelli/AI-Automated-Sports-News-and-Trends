@@ -233,8 +233,9 @@ function parsePubDate(input?: string): Date {
 
 async function fetchTeamFeed(
   yardbarkerSlug: string,
+  feedUrlOverride?: string,
 ): Promise<ParsedItem[]> {
-  const url = `https://www.yardbarker.com/rss/team/${yardbarkerSlug}`;
+  const url = feedUrlOverride ?? `https://www.yardbarker.com/rss/team/${yardbarkerSlug}`;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12_000);
@@ -261,8 +262,9 @@ async function fetchTeamFeed(
 async function fetchAndStoreForTeam(
   teamId: string,
   yardbarkerSlug: string,
+  feedUrlOverride?: string,
 ): Promise<number> {
-  const items = await fetchTeamFeed(yardbarkerSlug);
+  const items = await fetchTeamFeed(yardbarkerSlug, feedUrlOverride);
   if (items.length === 0) return 0;
 
   const rows = items.map((item) => {
@@ -329,6 +331,7 @@ export async function refreshAllFeeds(): Promise<RefreshSummary> {
           const inserted = await fetchAndStoreForTeam(
             team.id,
             team.yardbarkerSlug,
+            team.feedUrlOverride,
           );
           newAlerts += inserted;
           teamsRefreshed += 1;
