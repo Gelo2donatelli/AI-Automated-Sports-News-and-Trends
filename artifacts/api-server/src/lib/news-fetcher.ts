@@ -302,48 +302,101 @@ function prioritize(category: string, headline: string, summary?: string): strin
 // Importance scoring — numeric 1-10 for filtering/ranking
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Keyword score table — evaluated in order, highest match wins.
+// Aligned with scoring contract:
+//   Trade = 10 | Star ruled out = 10 | Major injury = 9 | Suspension = 9
+//   Starting QB/PG/Pitcher change = 9 | Final score = 8 | Signing/release = 8
+//   Questionable/doubtful = 7 | Reporter opinion = 3 | General article = 2
+// ---------------------------------------------------------------------------
 const KEYWORD_SCORES: { pattern: RegExp; score: number }[] = [
-  // Score 10 — hardest stops / bans / season-enders
-  { pattern: /\b(breaking|alert|just in)\b/i, score: 10 },
-  { pattern: /\b(suspended indefinitely|arrested|banned for life|lifetime ban|criminally charged)\b/i, score: 10 },
-  { pattern: /\b(fired|dismissed|terminated)\b/i, score: 10 },
-  { pattern: /\b(out for season|season[- ]ending|torn acl|torn mcl|torn achilles|placed on ir)\b/i, score: 10 },
-
-  // Score 9 — major transaction / game-changing events
-  { pattern: /\b(traded|trade\s+deadline|acquired|signed\s+(a\s+)?(max|multi[- ]year)|re[- ]signed\s+(to|for))\b/i, score: 9 },
-  { pattern: /\b(ruled out|will not play|won'?t play|did not dress)\b/i, score: 9 },
-  { pattern: /\b(overtime|ot\b|final score|final:?\s*\d|walk[- ]off|buzzer[- ]beater|no[- ]hitter|perfect game)\b/i, score: 9 },
-  { pattern: /\b(hired|named head coach|named manager|new head coach)\b/i, score: 9 },
-  { pattern: /\b(suspended\s+\d+|suspended for)\b/i, score: 9 },
-
-  // Score 8 — high-value status / roster moves
-  { pattern: /\b(questionable|doubtful|game[- ]time decision|day[- ]to[- ]day)\b/i, score: 8 },
-  { pattern: /\b(injured|injury)\b/i, score: 8 },
-  { pattern: /\b(inactive|active\s+list|designated\s+for\s+assignment|dfa\b|waived|released|cut\s+(by|from))\b/i, score: 8 },
-  { pattern: /\b(acquired|extension|contract\s+(extension|deal)|multi[- ]year\s+deal)\b/i, score: 8 },
-  { pattern: /\b(signed|signing)\b/i, score: 8 },
-
-  // Score 7 — notable depth-chart / lineup shifts
-  { pattern: /\b(starting|named\s+starter|starter|lineup\s+change|depth\s+chart)\b/i, score: 7 },
-  { pattern: /\b(benched|demoted|promoted|moved\s+to\s+(ir|dl|il|bullpen|rotation))\b/i, score: 7 },
-  { pattern: /\b(trade\s+rumors?|trade\s+talks?|trade\s+interest)\b/i, score: 7 },
+  // ── Score 10: Confirmed trade OR player confirmed out for season ────────────
+  {
+    pattern:
+      /\b(traded\s+to|traded\s+to\s+the|acquired\s+(from|via)|trade[d]?\s+(for|involving)|out\s+for\s+(the\s+)?(season|year)|season[- ]ending|torn\s+(acl|mcl|achilles|patellar)|placed\s+on\s+ir\b|will\s+miss\s+(the\s+)?(rest|remainder)\s+of)\b/i,
+    score: 10,
+  },
+  // ── Score 9: Major injury (surgery/fracture/break) ──────────────────────────
+  {
+    pattern:
+      /\b(ruled\s+out\s+(for\s+)?(indefinitely|multiple|the\s+season|the\s+year|extended)|surgery\b|will\s+have\s+surgery|underwent\s+surgery|fractur(e[ds]?|ed)|broken\s+(bone|leg|arm|wrist|hand|foot|ankle|collarbone|rib)|dislocat(ed|ion)|underwent\s+procedure)\b/i,
+    score: 9,
+  },
+  // ── Score 9: Suspension (confirmed, with length or "without pay") ───────────
+  {
+    pattern:
+      /\b(suspended\s+(indefinitely|\d+\s+(game|match|week)|without\s+pay|for\s+(the\s+)?(rest|remainder)|through|pending|following)|banned\s+(indefinitely|for\s+life|from\s+the\s+league))\b/i,
+    score: 9,
+  },
+  // ── Score 9: Named starting QB / Pitcher / PG / Goalie ──────────────────────
+  {
+    pattern:
+      /\b(named\s+(the\s+)?(starting|week\s+1|game\s+1|opening\s+day)\s+(quarterback|qb|pitcher|point\s+guard|pg|goalie|goalkeeper|center|starter)|will\s+start\s+(at\s+)?(quarterback|qb|point\s+guard|goalie|pitcher|center)\b|(starting|opening\s+day)\s+(qb|quarterback|pitcher|point\s+guard|pg|goalie|goalkeeper)\s+(is|will\s+be|named|set))\b/i,
+    score: 9,
+  },
+  // ── Score 9: Coach/manager fired or hired ───────────────────────────────────
+  {
+    pattern:
+      /\b(fired\s+as\s+(head\s+)?coach|hired\s+as\s+(head\s+)?coach|named\s+(head\s+)?coach|fired\s+as\s+manager|hired\s+as\s+manager|named\s+manager|head\s+coach\s+(fired|hired|named|named\s+interim))\b/i,
+    score: 9,
+  },
+  // ── Score 8: Final score / game result ──────────────────────────────────────
+  {
+    pattern:
+      /\b(final[:\s]\s*\d|defeats?\s+\w+\s+\d+[–\-]\d+|beats?\s+\w+\s+\d+[–\-]\d+|wins?\s+(game\s+\d|series|tonight)\s+\d+[–\-]\d+|walk[- ]off\b|buzzer[- ]beater\b|no[- ]hitter\b|perfect\s+game\b|shutout\s+(win|victory)|overtime\s+(win|victory|thriller)|clinch(ed|es)?\s+(playoff|series|title|berth)|eliminat(ed|es)\b)\b/i,
+    score: 8,
+  },
+  // ── Score 8: Signing or release ─────────────────────────────────────────────
+  {
+    pattern:
+      /\b(signs?\s+(with|to|a\s+\$|a\s+max|a\s+multi|a\s+deal|a\s+contract)|signed\s+(with|to|a\s+\$|a\s+multi|a\s+deal)|re[- ]signs?\s+(with|to|for)|waived\b|released\s+by|designated\s+for\s+assignment|dfa\b|non[- ]tendered?|claimed\s+off\s+waivers?|waiver\s+claim)\b/i,
+    score: 8,
+  },
+  // ── Score 8: Contract extension ──────────────────────────────────────────────
+  {
+    pattern:
+      /\b(contract\s+extension|extension\s+(signed?|agreed?|finalized?|complete[d]?)|agreed?\s+to\s+(a\s+)?\d+[- ]year|multi[- ]year\s+(extension|deal|contract))\b/i,
+    score: 8,
+  },
+  // ── Score 7: Questionable / doubtful injury tag ──────────────────────────────
+  {
+    pattern:
+      /\b(questionable\b|doubtful\b|game[- ]time\s+decision|gtd\b|day[- ]to[- ]day\b|week[- ]to[- ]week\b|limited\s+in\s+practice|did\s+not\s+practice|dnp\b|missed\s+practice|missed\s+(the\s+)?(game|start)\b|sidelined\b|listed\s+as\s+(questionable|doubtful))\b/i,
+    score: 7,
+  },
+  // ── Score 7: Depth-chart / lineup shift ──────────────────────────────────────
+  {
+    pattern:
+      /\b(benched\b|demoted\b|promoted\b|depth\s+chart\s+(change|update|shuffle|move)|inserted\s+into\s+the\s+(starting\s+)?lineup|moved\s+into\s+the\s+(starting\s+)?lineup|starting\s+lineup\s+change|scratch(ed)?\s+from\s+(the\s+)?lineup)\b/i,
+    score: 7,
+  },
+  // ── Score 3: Reporter / columnist opinion piece (not hard news) ──────────────
+  {
+    pattern:
+      /\b(according\s+to\s+sources?|per\s+sources?|sources?\s+tell|sources?\s+say|sources?\s+indicate|sources?\s+close\s+to|insider\s+report|column:|mailbag:|opinion:|editorial:|power\s+rankings?|my\s+take|i\s+think|here('?s)?\s+why|here\s+are\s+(my|the)\s+\d|three\s+things|five\s+things|what\s+we\s+learned|what\s+it\s+means|bold\s+prediction|early\s+look|first\s+look|first\s+impression)\b/i,
+    score: 3,
+  },
 ];
 
-// Base scores driven by existing category/priority classifications
+// ---------------------------------------------------------------------------
+// Base score when no keyword matches — fallback from priority/category.
+// Breaking tier defaults to 9 so it's always ticker-eligible.
+// ---------------------------------------------------------------------------
 const PRIORITY_BASE: Record<string, number> = {
   breaking: 9,
-  high: 7,
-  normal: 4,
+  high: 8,
+  normal: 2,
   low: 1,
 };
 
+// Bonus points for high-signal categories (on top of PRIORITY_BASE)
 const CATEGORY_BONUS: Record<string, number> = {
-  disciplinary: 2,
+  disciplinary: 1,
   injury_report: 1,
   transaction: 1,
   coaching_update: 1,
   lineup_update: 1,
-  game_result: 1,
+  game_result: 0,
 };
 
 function scoreAlert(

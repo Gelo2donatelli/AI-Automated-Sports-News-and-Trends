@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, gte, ilike, inArray, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, sql } from "drizzle-orm";
 import { db, alertsTable, teamsTable } from "@workspace/db";
 import {
   ListAlertsQueryParams,
@@ -80,10 +80,10 @@ router.get("/alerts/feed", async (req, res): Promise<void> => {
   }
   const { teamIds, limit } = parsed.data;
   const sport = sportFromQuery(req.query.sport);
-  // showAll=true opts in to including low-priority noise; default is filtered
+  // showAll=true bypasses quality gate; default enforces importanceScore >= 7
   const showAll = req.query.showAll === "true";
   const conditions = [];
-  if (!showAll) conditions.push(ne(alertsTable.priority, "low"));
+  if (!showAll) conditions.push(gte(alertsTable.importanceScore, 7));
   if (teamIds && teamIds.trim().length > 0) {
     const ids = teamIds
       .split(",")
