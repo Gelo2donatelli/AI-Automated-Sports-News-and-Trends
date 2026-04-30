@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Zap, Activity, Users, Settings, Rss } from "lucide-react";
+import { Zap, Activity, Users, Settings, Rss, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -13,6 +13,7 @@ export function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: "Live Feed", href: "/", icon: Rss },
     { name: "Breaking", href: "/breaking", icon: Zap },
+    { name: "Analyst", href: "/analyst", icon: Brain },
     { name: "Teams", href: "/teams", icon: Users },
     { name: "Preferences", href: "/preferences", icon: Settings },
   ];

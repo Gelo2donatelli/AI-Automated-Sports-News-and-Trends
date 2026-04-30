@@ -34,7 +34,7 @@ export interface Alert {
   teamLogoUrl?: string;
   headline: string;
   summary?: string;
-  /** injury, trade, lineup, performance, signing, suspension, general */
+  /** player_update, team_update, coaching_update, general */
   category: string;
   /** breaking, high, normal */
   priority: string;
@@ -83,6 +83,31 @@ export interface Preferences {
   updatedAt?: string;
 }
 
+export interface Insight {
+  id: string;
+  /** Optional - omitted for league-wide insights */
+  teamId?: string;
+  teamName?: string;
+  teamCity?: string;
+  teamAbbreviation?: string;
+  teamPrimaryColor?: string;
+  teamSecondaryColor?: string;
+  /** trend, prediction, stat, matchup */
+  insightType: string;
+  title: string;
+  body: string;
+  confidence: number;
+  tags: string[];
+  relatedAlertIds: string[];
+  generatedAt: string;
+}
+
+export interface InsightGenerationResult {
+  generated: number;
+  startedAt: string;
+  finishedAt: string;
+}
+
 export interface PreferencesInput {
   clientId: string;
   followedTeamIds: string[];
@@ -95,7 +120,7 @@ export type ListAlertsParams = {
    */
   teamId?: string;
   /**
-   * Filter by alert category (injury, trade, lineup, performance, signing, suspension, general)
+   * Filter by alert category (player_update, team_update, coaching_update, general)
    */
   category?: string;
   /**
@@ -123,6 +148,14 @@ export type GetAlertsByTeamParams = {
 };
 
 export type GetTrendingTeamsParams = {
+  limit?: number;
+};
+
+export type ListInsightsParams = {
+  /**
+   * Filter to a specific team (omit for league-wide + all teams)
+   */
+  teamId?: string;
   limit?: number;
 };
 

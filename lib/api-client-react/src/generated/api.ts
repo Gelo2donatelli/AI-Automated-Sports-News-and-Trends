@@ -24,7 +24,10 @@ import type {
   GetPreferencesParams,
   GetTrendingTeamsParams,
   HealthStatus,
+  Insight,
+  InsightGenerationResult,
   ListAlertsParams,
+  ListInsightsParams,
   OverviewStats,
   Preferences,
   PreferencesInput,
@@ -976,6 +979,181 @@ export function useGetTrendingTeams<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List AI-generated stats and trends insights
+ */
+export const getListInsightsUrl = (params?: ListInsightsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/insights?${stringifiedParams}`
+    : `/api/insights`;
+};
+
+export const listInsights = async (
+  params?: ListInsightsParams,
+  options?: RequestInit,
+): Promise<Insight[]> => {
+  return customFetch<Insight[]>(getListInsightsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListInsightsQueryKey = (params?: ListInsightsParams) => {
+  return [`/api/insights`, ...(params ? [params] : [])] as const;
+};
+
+export const getListInsightsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listInsights>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListInsightsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listInsights>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListInsightsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listInsights>>> = ({
+    signal,
+  }) => listInsights(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listInsights>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListInsightsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listInsights>>
+>;
+export type ListInsightsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List AI-generated stats and trends insights
+ */
+
+export function useListInsights<
+  TData = Awaited<ReturnType<typeof listInsights>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListInsightsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listInsights>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListInsightsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Trigger AI generation of new insights from recent alerts
+ */
+export const getGenerateInsightsUrl = () => {
+  return `/api/insights/generate`;
+};
+
+export const generateInsights = async (
+  options?: RequestInit,
+): Promise<InsightGenerationResult> => {
+  return customFetch<InsightGenerationResult>(getGenerateInsightsUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getGenerateInsightsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateInsights>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateInsights>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["generateInsights"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateInsights>>,
+    void
+  > = () => {
+    return generateInsights(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateInsightsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateInsights>>
+>;
+
+export type GenerateInsightsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Trigger AI generation of new insights from recent alerts
+ */
+export const useGenerateInsights = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateInsights>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateInsights>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getGenerateInsightsMutationOptions(options));
+};
 
 /**
  * @summary Get user team preferences (by client identifier)

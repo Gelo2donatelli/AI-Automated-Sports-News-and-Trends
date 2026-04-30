@@ -8,6 +8,7 @@ import Teams from "@/pages/teams";
 import TeamDetail from "@/pages/team-detail";
 import AlertDetail from "@/pages/alert-detail";
 import Breaking from "@/pages/breaking";
+import Analyst from "@/pages/analyst";
 import Preferences from "@/pages/preferences";
 import NotFound from "@/pages/not-found";
 
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/teams/:teamId" component={TeamDetail} />
       <Route path="/alerts/:alertId" component={AlertDetail} />
       <Route path="/breaking" component={Breaking} />
+      <Route path="/analyst" component={Analyst} />
       <Route path="/preferences" component={Preferences} />
       <Route component={NotFound} />
     </Switch>

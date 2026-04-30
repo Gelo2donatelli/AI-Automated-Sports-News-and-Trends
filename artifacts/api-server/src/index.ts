@@ -4,6 +4,10 @@ import {
   ensureTeamsSeeded,
   startBackgroundPoller,
 } from "./lib/news-fetcher";
+import {
+  migrateLegacyCategories,
+  startInsightsPoller,
+} from "./lib/insights-generator";
 
 const rawPort = process.env["PORT"];
 
@@ -29,8 +33,10 @@ app.listen(port, async (err) => {
 
   try {
     await ensureTeamsSeeded();
+    await migrateLegacyCategories();
     startBackgroundPoller();
+    startInsightsPoller();
   } catch (e) {
-    logger.error({ err: e }, "Failed to initialize news poller");
+    logger.error({ err: e }, "Failed to initialize background jobs");
   }
 });

@@ -64,7 +64,7 @@ export const ListAlertsQueryParams = zod.object({
     .string()
     .optional()
     .describe(
-      "Filter by alert category (injury, trade, lineup, performance, signing, suspension, general)",
+      "Filter by alert category (player_update, team_update, coaching_update, general)",
     ),
   priority: zod.coerce
     .string()
@@ -87,9 +87,7 @@ export const ListAlertsResponseItem = zod.object({
   summary: zod.string().optional(),
   category: zod
     .string()
-    .describe(
-      "injury, trade, lineup, performance, signing, suspension, general",
-    ),
+    .describe("player_update, team_update, coaching_update, general"),
   priority: zod.string().describe("breaking, high, normal"),
   sourceName: zod.string(),
   sourceUrl: zod.string(),
@@ -118,9 +116,7 @@ export const GetAlertResponse = zod.object({
   summary: zod.string().optional(),
   category: zod
     .string()
-    .describe(
-      "injury, trade, lineup, performance, signing, suspension, general",
-    ),
+    .describe("player_update, team_update, coaching_update, general"),
   priority: zod.string().describe("breaking, high, normal"),
   sourceName: zod.string(),
   sourceUrl: zod.string(),
@@ -156,9 +152,7 @@ export const GetAlertFeedResponseItem = zod.object({
   summary: zod.string().optional(),
   category: zod
     .string()
-    .describe(
-      "injury, trade, lineup, performance, signing, suspension, general",
-    ),
+    .describe("player_update, team_update, coaching_update, general"),
   priority: zod.string().describe("breaking, high, normal"),
   sourceName: zod.string(),
   sourceUrl: zod.string(),
@@ -189,9 +183,7 @@ export const GetBreakingAlertsResponseItem = zod.object({
   summary: zod.string().optional(),
   category: zod
     .string()
-    .describe(
-      "injury, trade, lineup, performance, signing, suspension, general",
-    ),
+    .describe("player_update, team_update, coaching_update, general"),
   priority: zod.string().describe("breaking, high, normal"),
   sourceName: zod.string(),
   sourceUrl: zod.string(),
@@ -241,9 +233,7 @@ export const GetAlertsByTeamResponseItem = zod.object({
       summary: zod.string().optional(),
       category: zod
         .string()
-        .describe(
-          "injury, trade, lineup, performance, signing, suspension, general",
-        ),
+        .describe("player_update, team_update, coaching_update, general"),
       priority: zod.string().describe("breaking, high, normal"),
       sourceName: zod.string(),
       sourceUrl: zod.string(),
@@ -308,6 +298,49 @@ export const GetTrendingTeamsResponseItem = zod.object({
   latestHeadline: zod.string().optional(),
 });
 export const GetTrendingTeamsResponse = zod.array(GetTrendingTeamsResponseItem);
+
+/**
+ * @summary List AI-generated stats and trends insights
+ */
+export const listInsightsQueryLimitDefault = 20;
+
+export const ListInsightsQueryParams = zod.object({
+  teamId: zod.coerce
+    .string()
+    .optional()
+    .describe("Filter to a specific team (omit for league-wide + all teams)"),
+  limit: zod.coerce.number().default(listInsightsQueryLimitDefault),
+});
+
+export const ListInsightsResponseItem = zod.object({
+  id: zod.string(),
+  teamId: zod
+    .string()
+    .optional()
+    .describe("Optional - omitted for league-wide insights"),
+  teamName: zod.string().optional(),
+  teamCity: zod.string().optional(),
+  teamAbbreviation: zod.string().optional(),
+  teamPrimaryColor: zod.string().optional(),
+  teamSecondaryColor: zod.string().optional(),
+  insightType: zod.string().describe("trend, prediction, stat, matchup"),
+  title: zod.string(),
+  body: zod.string(),
+  confidence: zod.number(),
+  tags: zod.array(zod.string()),
+  relatedAlertIds: zod.array(zod.string()),
+  generatedAt: zod.coerce.date(),
+});
+export const ListInsightsResponse = zod.array(ListInsightsResponseItem);
+
+/**
+ * @summary Trigger AI generation of new insights from recent alerts
+ */
+export const GenerateInsightsResponse = zod.object({
+  generated: zod.number(),
+  startedAt: zod.coerce.date(),
+  finishedAt: zod.coerce.date(),
+});
 
 /**
  * @summary Get user team preferences (by client identifier)

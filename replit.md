@@ -28,12 +28,29 @@ GRIDIRON ALERTS — a real-time NFL news alerts dashboard for sports bettors and
 
 - `teams` — 32 NFL teams (id, city, name, abbreviation, conference, division, primary/secondary color, slug, yardbarker slug, alert count)
 - `alerts` — news alerts (id, team_id, headline, summary, category, priority, source name/url, published_at)
+- `insights` — AI-generated stats/trends (id, team_id, insight_type, title, body, confidence, tags, related_alert_ids)
 - `preferences` — per-client (anonymous) followed teams + enabled categories
 - `refresh_state` — last global refresh timestamp
 
+## Categories
+
+Alerts are auto-categorized by keyword into four high-value buckets:
+- `player_update` — injuries, trades, signings, depth chart, props/performance
+- `team_update` — standings, results, scheme, front office, matchups
+- `coaching_update` — hires/fires, coordinators, playcaller news
+- `general` — stadium, ownership, miscellaneous
+
+## AI Analyst (Insights)
+
+A second background worker uses Anthropic Claude (via Replit AI Integrations, no API key needed) to read the last 72 hours of per-team headlines and generate short, high-value insights for sports bettors and fantasy managers. Insights have:
+- `insightType`: trend / prediction / stat / matchup
+- `title`, `body`, `confidence` (0-100), `tags`, `relatedAlertIds`
+
+Generation runs every 30 minutes (`startInsightsPoller`), processes up to 6 teams per run with a 6h per-team cooldown, and uses claude-haiku-4-5 with strict-JSON parsing. Manual trigger: `POST /api/insights/generate`. Results are surfaced on the home page strip and the dedicated `/analyst` page.
+
 ## Background Jobs
 
-The API server polls all 32 team feeds in parallel every 5 minutes and after a 2s warm-up at startup. A `POST /api/alerts/refresh` endpoint triggers a manual refresh. New alerts are deduplicated by source URL.
+The API server polls all 32 team feeds in parallel every 5 minutes and after a 2s warm-up at startup. A `POST /api/alerts/refresh` endpoint triggers a manual refresh. New alerts are deduplicated by source URL. The AI Analyst poller runs every 30 minutes after a 20s warm-up.
 
 ## Key Commands
 

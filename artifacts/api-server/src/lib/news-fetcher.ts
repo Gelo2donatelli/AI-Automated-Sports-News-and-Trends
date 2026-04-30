@@ -77,62 +77,49 @@ function parseRss(xml: string): ParsedItem[] {
 
 function categorize(headline: string, summary?: string): string {
   const text = `${headline} ${summary ?? ""}`.toLowerCase();
+
+  // Coaching: hires, fires, coordinator changes, scheme talk
   if (
-    /\b(injur|injured|hurt|out for season|tear|torn|sprain|concussion|knee|hamstring|ankle|shoulder|surgery|ir |placed on ir|reserve\/injured|questionable|doubtful|ruled out|sidelined|limited|did not practice|dnp)\b/.test(
+    /\b(head coach|coach[ie]|coaching|coordinator|fired|hired|hiring|firing|interim|playcaller|play[- ]caller|staff change|assistant coach|coach\b)\b/.test(
       text,
     )
   ) {
-    return "injury";
+    return "coaching_update";
   }
+
+  // Player-centric: injuries, individual performance, trades involving named player, signings, suspensions, depth-chart
   if (
-    /\b(trade|traded|trading|deal sends|acquired|acquire|swap)\b/.test(text)
-  ) {
-    return "trade";
-  }
-  if (
-    /\b(suspension|suspended|fine|fined|investigat|arrest|charged|legal trouble|domestic)\b/.test(
+    /\b(injur|injured|hurt|out for season|tear|torn|sprain|concussion|knee|hamstring|ankle|shoulder|surgery|placed on ir|ir designat|reserve\/injured|questionable|doubtful|ruled out|sidelined|did not practice|dnp|trade[ds]?|trading|acquired|acquire|sign(ed|s|ing)?|contract|extension|free agent|re-signed|resigned|suspended|suspension|fined|arrest|charged|starter|starting|benched|demoted|promoted|inactive|depth chart|qb1|rb1|wr1|backup|named starter|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|fantasy|prop)\b/.test(
       text,
     )
   ) {
-    return "suspension";
+    return "player_update";
   }
+
+  // Team-level: front office, results, season trends, division/playoff implications
   if (
-    /\b(sign|signed|signs|contract|extension|deal worth|free agent|agreed to terms|re-signed|resigned)\b/.test(
+    /\b(team|franchise|roster|defense|offense|special teams|rank(ed|ing|s)?|standings|division|playoff|wild ?card|seed|record|win streak|losing streak|loss|won|beat|defeated|matchup|against|scheme|game ?plan|schedule|bye week|practice squad|cap space|salary cap|gm |general manager|owner|stadium|draft pick)\b/.test(
       text,
     )
   ) {
-    return "signing";
+    return "team_update";
   }
-  if (
-    /\b(starter|starting|benched|demoted|promoted|active|inactive|depth chart|qb1|rb1|wr1|backup|starts at|start the|named starter)\b/.test(
-      text,
-    )
-  ) {
-    return "lineup";
-  }
-  if (
-    /\b(touchdown|yards|rushed for|passed for|catches|reception|interception|sack|career-high|stat|td|points|fantasy|prop|over\/under|spread|odds)\b/.test(
-      text,
-    )
-  ) {
-    return "performance";
-  }
+
   return "general";
 }
 
 function prioritize(category: string, headline: string): string {
   const text = headline.toLowerCase();
   if (
-    /\b(breaking|alert|just in|trade|traded|out for season|torn acl|suspended|arrest|placed on ir|ir designated|will miss|ruled out|fired|hired)\b/.test(
+    /\b(breaking|alert|just in|trade[ds]?|out for season|torn acl|suspended|arrest|placed on ir|ir designated|will miss|ruled out|fired|hired)\b/.test(
       text,
     )
   ) {
     return "breaking";
   }
   if (
-    category === "injury" ||
-    category === "trade" ||
-    category === "suspension" ||
+    category === "player_update" ||
+    category === "coaching_update" ||
     /\b(start|named|won't play|wont play|inactive|active|game-time decision|questionable|doubtful)\b/.test(
       text,
     )

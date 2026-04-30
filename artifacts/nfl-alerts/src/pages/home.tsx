@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Activity, Flame, ShieldAlert, ArrowRight } from "lucide-react";
+import { Activity, Flame, ShieldAlert, ArrowRight, Brain } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { AlertCard } from "@/components/alert-card";
+import { InsightCard } from "@/components/insight-card";
 import { RefreshButton } from "@/components/refresh-button";
 import { TeamBadge } from "@/components/team-badge";
 import { useClientId } from "@/hooks/use-client-id";
-import { 
-  useGetOverviewStats, 
-  useGetAlertFeed, 
+import {
+  useGetOverviewStats,
+  useGetAlertFeed,
   useGetTrendingTeams,
-  useGetPreferences
+  useGetPreferences,
+  useListInsights,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +42,11 @@ export default function Home() {
 
   const { data: trending, isLoading: isTrendingLoading } = useGetTrendingTeams({ limit: 5 });
 
+  const { data: topInsights } = useListInsights(
+    { limit: 4 },
+    { query: { refetchInterval: 60_000 } },
+  );
+
   return (
     <Layout>
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
@@ -68,6 +75,28 @@ export default function Home() {
               <RefreshButton />
             </div>
           </div>
+
+          {topInsights && topInsights.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-mono tracking-wider uppercase text-muted-foreground flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  Analyst Desk · Latest Reads
+                </h2>
+                <Link
+                  href="/analyst"
+                  className="text-xs font-mono uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1"
+                >
+                  All insights <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {topInsights.slice(0, 2).map((insight, i) => (
+                  <InsightCard key={insight.id} insight={insight} index={i} />
+                ))}
+              </div>
+            </section>
+          )}
 
           <div className="space-y-4">
             {isFeedLoading ? (

@@ -12,7 +12,7 @@ export type ListAlertsParams = {
    */
   teamId?: string;
   /**
-   * Filter by alert category (injury, trade, lineup, performance, signing, suspension, general)
+   * Filter by alert category (player_update, team_update, coaching_update, general)
    */
   category?: string;
   /**

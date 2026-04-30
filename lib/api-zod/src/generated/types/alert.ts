@@ -17,7 +17,7 @@ export interface Alert {
   teamLogoUrl?: string;
   headline: string;
   summary?: string;
-  /** injury, trade, lineup, performance, signing, suspension, general */
+  /** player_update, team_update, coaching_update, general */
   category: string;
   /** breaking, high, normal */
   priority: string;

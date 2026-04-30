@@ -13,13 +13,10 @@ import { Settings, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
-  { id: "injury", label: "Injuries", desc: "Player injuries, practice status, and game designations" },
-  { id: "trade", label: "Trades", desc: "Player trades and block rumors" },
-  { id: "lineup", label: "Lineups", desc: "Depth chart changes and starting announcements" },
-  { id: "performance", label: "Performance", desc: "Notable game stats and player performance" },
-  { id: "signing", label: "Signings", desc: "Free agent signings and contract extensions" },
-  { id: "suspension", label: "Suspensions", desc: "League discipline and team suspensions" },
-  { id: "general", label: "General News", desc: "Coaching changes, stadium news, general franchise info" }
+  { id: "player_update", label: "Player Updates", desc: "Injuries, trades, signings, depth chart, props & performance" },
+  { id: "team_update", label: "Team Updates", desc: "Standings, results, scheme, front office & matchup news" },
+  { id: "coaching_update", label: "Coaching Updates", desc: "Hires, fires, coordinator changes & playcaller news" },
+  { id: "general", label: "General News", desc: "Stadium, ownership, league-wide and miscellaneous" },
 ];
 
 export default function Preferences() {
