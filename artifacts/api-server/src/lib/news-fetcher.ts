@@ -84,25 +84,83 @@ function isNoise(headline: string, summary?: string): boolean {
   const h = headline.toLowerCase();
   const text = `${h} ${(summary ?? "").toLowerCase()}`;
 
-  // Media drama: reporter/personality disputes, "responds to", "calls out", etc.
+  // ── Media drama / personality conflicts ────────────────────────────────────
   if (
-    /\b(responds?\s+to|react(s|ed|ing)?\s+to|fires?\s+back|claps?\s+back|calls?\s+out|takes?\s+(a\s+)?shot\s+at|slams?\s+|blasts?\s+|rips?\s+|ripping\s+|weigh(s|ed|ing)?\s+in\s+on|sound(s|ed|ing)?\s+off|chimes?\s+in|speaks?\s+out\s+against|defends?\s+(himself|herself|themselves|his|her|their)|pushes?\s+back\s+on|takes?\s+(aim|issue)\s+(at|with))\b/.test(
+    /\b(responds?\s+to|react(s|ed|ing)?\s+to|fires?\s+back|claps?\s+back|calls?\s+out|takes?\s+(a\s+)?shot\s+at|slams?\b|blasts?\b|rips?\b|ripping\b|weigh(s|ed|ing)?\s+in\s+on|sound(s|ed|ing)?\s+off|chimes?\s+in|speaks?\s+out\s+against|defends?\s+(himself|herself|themselves|his|her|their)|pushes?\s+back\s+on|takes?\s+(aim|issue)\s+(at|with))\b/.test(
       text,
     )
   ) {
     return true;
   }
 
-  // Opinion / ranking content — not actionable
+  // ── Debate show clips & talk-show takes ───────────────────────────────────
   if (
-    /\b(power rankings?|mock draft|report card|hot take[s]?|mailbag|the\s+case\s+for|why\s+the\s+\w+\s+should|here'?s?\s+why|opinion:|column:|commentary:|fantasy advice|dfs advice)\b/.test(
+    /\b(first\s+take|get\s+up\b|around\s+the\s+horn|pardon\s+the\s+interruption|pti\b|undisputed\b|colin\s+cowherd|skip\s+bayless|shannon\s+sharpe|max\s+kellerman|stephen\s+a\.?\s+smith|debate\s+(show|clip|segment)|talking\s+heads|sports\s+debate|talking\s+about)\b/.test(
       text,
     )
   ) {
     return true;
   }
 
-  // Social-media & gossip hooks
+  // ── Opinion / ranking / prediction content ─────────────────────────────────
+  if (
+    /\b(power rankings?|mock draft|report card|hot take[s]?|mailbag|the\s+case\s+(for|against)|why\s+the\s+\w+\s+should|here'?s?\s+why|opinion:|column:|commentary:|fantasy advice|dfs advice|overrated|underrated|most\s+overrated|best\s+and\s+worst|tier\s+list|ranking\s+every|ranking\s+all|ranking\s+the|ranked:|ranking:|who\s+wins\b|who\s+would\s+win|predictions?\s+for|projected?\s+to|my\s+(take|pick|prediction))\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // ── Generic excitement / hype / vague quotes ───────────────────────────────
+  if (
+    /\b(excited?\s+(about|for|to)|can'?t\s+wait|looking\s+forward\s+to|feels?\s+great|feels?\s+good\s+about|ready\s+to\s+compete|hungry\s+for|driven\s+to|motivated\s+(to|by)|team\s+(is\s+)?(excited|confident|focused|united|hungry)|staying\s+positive|positive\s+vibes|locker\s+room\s+(chemistry|unity|vibe)|blessed\s+to\b|grateful\s+for\b|great\s+atmosphere)\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // ── Rumors without confirmed action (trade interest/talks without deal) ────
+  // Allow: "reportedly traded", "reportedly signed", "reportedly injured", "reportedly released"
+  // Block: "reportedly interested", "reportedly in talks with" (no action word)
+  if (
+    /\b(reportedly\s+(interest(ed|s)?|consider(ed|ing|s)?|explored?|could|might|may|target(ed|ing|s)?|in\s+talks?\s+(with|about|over)))\b/.test(
+      text,
+    ) &&
+    !/\b(traded|signed|released|waived|fired|hired|suspended|injured|arrested|extended|acquired|out\s+for|placed\s+on)\b/.test(text)
+  ) {
+    return true;
+  }
+
+  // ── Take-based / clickbait framing ────────────────────────────────────────
+  if (
+    /\b(is\s+it\s+time\s+to|bold\s+prediction|unpopular\s+opinion|controversial\s+take|the\s+real\s+reason|you\s+won'?t\s+believe|this\s+is\s+why|here'?s?\s+what|what\s+you\s+need\s+to\s+know\s+about|everything\s+you\s+need|fans?\s+(are\s+)?(losing\s+it|going\s+crazy|react(s|ed|ing)?)|twitter\s+react(s|ed|ing)?|social\s+media\s+react(s|ed|ing)?)\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // ── Long-form features / profile pieces / history ─────────────────────────
+  if (
+    /\b(inside\s+the\s+(story|life|world|rise)|the\s+story\s+of|the\s+(making|rise|fall)\s+of|a\s+look\s+at|looking\s+back\s+at|remember\s+when|on\s+this\s+day|throwback|years?\s+ago\s+today|oral\s+history|the\s+untold\s+story|portrait\s+of|in\s+depth\s+with|exclusive\s+sit[\s-]down|feature:)\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // ── Recap / review without actionable data ────────────────────────────────
+  // Allow recaps mentioning injuries, scores, roster moves — block pure narrative recaps
+  if (
+    /\b(what\s+we\s+learned|takeaways?\s+from|lessons?\s+from|stock\s+(up|down)|winners?\s+and\s+losers?|grades?\s+for|gave\s+(it|them|him|her)\s+(an?\s+)?(a|b|c|d|f)\b|draft\s+(grades?|recap|review|analysis)|season\s+in\s+review|year\s+in\s+review|offseason\s+(grade|review|report\s+card))\b/.test(
+      text,
+    )
+  ) {
+    return true;
+  }
+
+  // ── Social-media & gossip hooks ────────────────────────────────────────────
   if (
     /\b(tweets?|instagram\s+post|tiktok|social media\s+(post|backlash|reaction)|goes?\s+viral|viral\s+moment|beef\s+with|feud\s+(between|with)|drama\s+(between|over)|disparag|diss\b|name[- ]calling|clapping\s+back)\b/.test(
       text,
@@ -111,7 +169,7 @@ function isNoise(headline: string, summary?: string): boolean {
     return true;
   }
 
-  // Media personality-centric stories (reporter opinions on another person's words)
+  // ── Media personality-centric commentary ──────────────────────────────────
   if (
     /\b(disparaging\s+comment|critical\s+comment|insults?\s+(from|by)|responded?\s+to\s+(criticism|comments?|claims?|report|dig|jab|shot|accusation))\b/.test(
       text,
@@ -126,54 +184,72 @@ function isNoise(headline: string, summary?: string): boolean {
 function categorize(headline: string, summary?: string): string {
   const text = `${headline} ${summary ?? ""}`.toLowerCase();
 
-  // Coaching: hires, fires, coordinator changes, scheme talk
+  // ── Coaching changes: hires, fires, extensions, coordinator moves ──────────
   if (
-    /\b(head coach|coach[ie]|coaching|coordinator|fired|hired|hiring|firing|interim|playcaller|play[- ]caller|staff change|assistant coach|manager fired|manager hired|skipper|bench coach|pitching coach|hitting coach|head coach hired|coach\b)\b/.test(
+    /\b(fired\s+as\s+(head\s+)?coach|hired\s+as\s+(head\s+)?coach|named\s+(head\s+)?coach|named\s+(interim|new)\s+(head\s+)?coach|coaching\s+(change|search|staff|hire|fire)|head\s+coach(ing)?\b|offensive\s+coordinator|defensive\s+coordinator|special\s+teams\s+coordinator|assistant\s+coach|pitching\s+coach|hitting\s+coach|bench\s+coach|manager\s+(hired|fired|named|resigned?|let\s+go)|skipper\s+(fired|hired|resigns?)|front\s+office\s+(move|change)|general\s+manager\s+(fired|hired|named|resigns?))\b/.test(
       text,
     )
   ) {
     return "coaching_update";
   }
 
-  // Injury-specific — surfaced before general player_update for clearer filtering
+  // ── Injury / availability reports ────────────────────────────────────────
   if (
-    /\b(injur|injured|hurt|out for season|tear|torn|sprain|fracture|concussion|knee|hamstring|ankle|shoulder|elbow|achilles|surgery|placed on ir|ir designat|reserve\/injured|injured list|il \b|10[- ]day il|15[- ]day il|60[- ]day il|day[- ]to[- ]day|questionable|doubtful|ruled out|sidelined|did not practice|dnp|non-contact|limited practice|full practice|pes list|suspended without pay)\b/.test(
+    /\b(injur(ed|y|ies)|ruled\s+out|questionable\b|doubtful\b|out\s+indefinitely|out\s+for\s+(the\s+)?(season|year|game|series)|day[- ]to[- ]day|week[- ]to[- ]week|placed\s+on\s+(ir|the\s+il|disabled\s+list)|designated\s+for\s+(return|assignment)\s+from\s+ir|torn\b|tear\b|sprain(ed)?|fractur|concussion|surgery|procedure|operated?\s+on|achilles|hamstring|acl\b|mcl\b|meniscus|knee\b.*\b(injur|surg|procedure)|ankle\s+injur|shoulder\s+injur|elbow\s+injur|back\s+injur|sidelined|did\s+not\s+(practice|play|dress)|dnp\b|non[- ]contact\s+jersey|limited\s+practice|full\s+practice|returned\s+to\s+practice|missed\s+(practice|game|start)|pes\s+list|covid\s+list|day\s+to\s+day|game[- ]time\s+decision|gtd\b|won'?t\s+play|will\s+not\s+play|inactive\s+list|designated\s+survivor)\b/.test(
       text,
     )
   ) {
     return "injury_report";
   }
 
-  // Transactions: trades, signings, contract moves — high fantasy/betting value
+  // ── Transactions: trades, signings, releases, waives, extensions ─────────
   if (
-    /\b(trade[ds]?|trading|traded to|acquired|acquire|signed?\s+(with|to|a|for|new)|re-signs?|re-signed|signing\s+(with|a)|signs\s+(with|to)|free\s+agent|contract\s+extension|contract\s+deal|extension|waived|released|cut\s+(by|from)|designated\s+for\s+assignment|dfa|claimed\s+off|waiver\s+claim|buyout|opted?\s+out|player\s+option|contract\s+restructured)\b/.test(
+    /\b(traded?\b|trading\b|traded\s+to|acquired?\b|acquire[ds]?\b|signed?\s+(a?\s*)?(deal|contract|extension|with|to\b)|re[- ]signs?|re[- ]signed|signing\s+(with|a\s+deal|a\s+contract)|signs\s+(with|to|a)\b|free\s+agent\s+signing|free\s+agent\s+deal|contract\s+(extension|deal|restructure[d]?|renegotiat)|extension\b.*\byears?\b|multi[- ]year\s+(deal|contract|extension)|released?\b|waived?\b|cut\s+(by|from)\b|designated\s+for\s+assignment|dfa\b|claimed?\s+off\s+waivers?|waiver\s+(claim|wire)|buyout|opted?\s+out|player\s+option\s+(declined|exercised|picked\s+up)|qualifying\s+offer|tender\s+(offered?|received?|declined?)|non[- ]tendered?)\b/.test(
       text,
     )
   ) {
     return "transaction";
   }
 
-  // Player performance / stats / depth chart — fantasy/betting signal
+  // ── Disciplinary / legal / league actions ────────────────────────────────
   if (
-    /\b(starter|starting|named starter|benched|demoted|promoted|inactive|active|depth chart|qb1|rb1|wr1|backup|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|career high|home run|hr|grand slam|rbi|strikeout|no-hitter|complete game|era|batting average|on-base|slugging|stolen base|saves|closer|three-pointer|3-pointer|triple-double|double-double|points per game|rebound|assist|blocks|steal|buzzer beater|playoff clinch|first round pick|lottery pick)\b/.test(
-      text,
-    )
-  ) {
-    return "player_update";
-  }
-
-  // Roster / team-level moves with betting/fantasy implications
-  if (
-    /\b(suspension|suspended|fined|arrest|charged|arrested|convicted|banned|reinstated|appeal)\b/.test(
+    /\b(suspended\b|suspension\b|suspended\s+(for|without|indefinitely)|fined\s+\$|arrested\b|charged\b|convicted\b|banned\s+(from|for|indefinitely)|reinstated\b|appeal(ed|ing|s)?\s+(suspension|ban|fine)|league[- ]issued\s+(suspension|fine|ban)|placed\s+on\s+(commissioner'?s?\s+)?exempt|disciplinary\s+(action|hearing|matter))\b/.test(
       text,
     )
   ) {
     return "disciplinary";
   }
 
-  // Team-level: results, standings, cap, roster strategy
+  // ── Starting lineup / depth-chart changes ────────────────────────────────
   if (
-    /\b(team|franchise|roster|defense|offense|special teams|rotation|bullpen|lineup|standings|division|wild ?card|seed|record|win streak|losing streak|won|beat|defeated|cap space|salary cap|luxury tax|gm |general manager|owner|stadium|draft pick|prospect|farm system|minor league|two-way contract|series|sweep|playoff)\b/.test(
+    /\b(named\s+(the\s+)?(starting|opening|day\s+1)\s+(quarterback|qb|pitcher|starter|center|goalie|goalkeeper)|named\s+starter\b|will\s+start\b.*\b(game\s+1|opener|sunday|monday|tonight)|starting\s+(lineup|rotation|qb|pitcher|goalie|center)|opening\s+(day\s+starter|day\s+lineup|start)|moved\s+(to|into)\s+the\s+starting|inserted\s+into\s+the\s+(lineup|rotation)|benched\b|demoted\s+(to|from)\b|promoted\s+(to|from)\b|depth\s+chart\s+(change|update|move|shuffle)|inactive[s]?\s+(list|for\s+week)|scratch(ed)?\s+(from\s+the\s+lineup|for\s+(tonight|sunday|game))|removed\s+from\s+(the\s+)?lineup|placed\s+on\s+waivers)\b/.test(
+      text,
+    )
+  ) {
+    return "lineup_update";
+  }
+
+  // ── Final scores / game results / upsets / overtime ──────────────────────
+  if (
+    /\b(final[:\s]|final\s+score|defeats?\b|defeated\b|beats?\b|beat\b.*\b\d+[–-]\d+|wins?\b.*\b(game\s+\d|series|matchup|tonight)|loses?\b|loss\b.*\b(clinch|elimin|advance)|overtime\b|ot\b\s*win|double\s+overtime|triple\s+overtime|walk[- ]off\b|buzzer[- ]beater\b|no[- ]hitter\b|perfect\s+game\b|shutout\b.*\b(win|victory)|clinch(ed|es|ing)?\b|eliminat(ed|es|ing)\b|advance[ds]?\s+to\b|series\s+(lead|tied|over)|upset\b.*\b(win|victory|defeat))\b/.test(
+      text,
+    )
+  ) {
+    return "game_result";
+  }
+
+  // ── Player performance / stats (lower value but still informational) ──────
+  if (
+    /\b(touchdown|td\b|yards?\b|rushing\s+yards|passing\s+yards|receiving\s+yards|sack\b|interception\b|home\s+run|hr\b|grand\s+slam|rbi\b|strikeout|saves?\b|era\b|batting\s+average|slugging|on[- ]base|stolen\s+base|three[- ]pointer|3[- ]pointer|triple[- ]double|double[- ]double|points?\s+per\s+game|rebound|assist\b|blocks?\b|steals?\b|plus[- ]minus|career[- ]high|career\s+best)\b/.test(
+      text,
+    )
+  ) {
+    return "player_update";
+  }
+
+  // ── Team-level: standings, cap, draft, franchise news ────────────────────
+  if (
+    /\b(standings?\b|wild\s*card|playoff\s+(race|picture|berth|seed)|cap\s+space|salary\s+cap|luxury\s+tax|trade\s+deadline|roster\s+(move|cut|decision|deadline)|draft\s+(pick|selection|class|prospect)|minor\s+league|farm\s+system|franchise\s+(tag|player|move|record)|rebuild|tanking|ownership\s+(sale|change)|stadium\s+(deal|move|news))\b/.test(
       text,
     )
   ) {
@@ -189,34 +265,36 @@ function prioritize(category: string, headline: string, summary?: string): strin
 
   const text = headline.toLowerCase();
 
-  // True breaking news: major transactions, season-ending events, firings/hirings
+  // ── True breaking: confirmed season-enders, major moves, legal events ─────
   if (
-    /\b(breaking|alert|just in|out for season|torn acl|torn mcl|season[- ]ending|will miss (the )?(rest|remainder)|placed on ir|ir designated|traded to|signs? (with|a)|re[- ]signs?|waived|released|fired|hired|arrested|suspended indefinitely)\b/.test(
+    /\b(breaking[:\s]|just\s+in[:\s]|alert[:\s]|out\s+for\s+(the\s+)?(season|year)|season[- ]ending|torn\s+(acl|mcl|achilles)|placed\s+on\s+ir\b|traded\s+to\b|signs?\s+(with|a\s+\$|a\s+max)|re[- ]signs?\s+(to|for)\b|waived\b|released\b|fired\b.*\b(coach|manager|coordinator|gm)|hired\b.*\b(coach|manager|coordinator|gm)|arrested\b|suspended\s+indefinitely|suspended\s+(without\s+pay|for\s+\d+)|banned\s+(indefinitely|for\s+life)|contract\s+extension\s+(signed?|finalized?|agreed?))\b/.test(
       text,
     )
   ) {
     return "breaking";
   }
 
-  // High-value for fantasy & betting: injury status, lineup changes, transactions, discipline
+  // ── High-value: all actionable categories + key status keywords ───────────
   if (
     category === "injury_report" ||
     category === "transaction" ||
     category === "disciplinary" ||
     category === "coaching_update" ||
-    /\b(questionable|doubtful|ruled out|game[- ]time decision|inactive|active|named starter|won'?t play|wont play|did not practice|limited|full practice|day[- ]to[- ]day|suspended|fined|benched|demoted|promoted|depth chart)\b/.test(
+    category === "lineup_update" ||
+    category === "game_result" ||
+    /\b(questionable\b|doubtful\b|ruled\s+out|game[- ]time\s+decision|gtd\b|inactive\b|active\s+list|named\s+starter|won'?t\s+play|will\s+not\s+play|did\s+not\s+practice|limited\s+practice|day[- ]to[- ]day|week[- ]to[- ]week|suspended\b|fined\s+\$|benched\b|demoted\b|promoted\b|depth\s+chart|contract\s+extension|multi[- ]year\s+deal|walk[- ]off|buzzer[- ]beater|overtime|no[- ]hitter|perfect\s+game|clinch|eliminat|playoff\s+berth|upset)\b/.test(
       text,
     )
   ) {
     return "high";
   }
 
-  // Player updates with clear stats/performance signal
+  // ── Player/stat updates — useful but not urgent ───────────────────────────
   if (category === "player_update") {
     return "normal";
   }
 
-  // General / team updates — standard feed content
+  // ── General / team updates — standard feed content ────────────────────────
   return "normal";
 }
 
@@ -255,8 +333,8 @@ const KEYWORD_SCORES: { pattern: RegExp; score: number }[] = [
 const PRIORITY_BASE: Record<string, number> = {
   breaking: 9,
   high: 7,
-  normal: 5,
-  low: 2,
+  normal: 4,
+  low: 1,
 };
 
 const CATEGORY_BONUS: Record<string, number> = {
@@ -264,6 +342,8 @@ const CATEGORY_BONUS: Record<string, number> = {
   injury_report: 1,
   transaction: 1,
   coaching_update: 1,
+  lineup_update: 1,
+  game_result: 1,
 };
 
 function scoreAlert(
@@ -272,6 +352,9 @@ function scoreAlert(
   headline: string,
   summary?: string,
 ): number {
+  // Noise is unconditionally pinned low — keywords can't rescue gossip/opinions
+  if (priority === "low") return 1;
+
   const text = `${headline} ${summary ?? ""}`;
 
   let maxKeyword = 0;
@@ -282,7 +365,7 @@ function scoreAlert(
     }
   }
 
-  const base = PRIORITY_BASE[priority] ?? 5;
+  const base = PRIORITY_BASE[priority] ?? 4;
   const bonus = CATEGORY_BONUS[category] ?? 0;
   const fromPriority = Math.min(10, base + bonus);
 

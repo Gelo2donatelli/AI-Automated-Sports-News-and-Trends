@@ -13,6 +13,8 @@ import {
   ShieldAlert,
   Users,
   FileText,
+  Trophy,
+  ListOrdered,
 } from "lucide-react";
 
 interface AlertCardProps {
@@ -24,7 +26,9 @@ const SPORT_PILL: Record<string, string> = {
   nfl: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   mlb: "bg-sky-500/15 text-sky-400 border-sky-500/30",
   nba: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  nhl: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
   ncaaf: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  ncaab: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
   golf: "bg-teal-500/15 text-teal-400 border-teal-500/30",
 };
 
@@ -54,6 +58,16 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     label: "COACHING",
     icon: Users,
     className: "text-blue-400 bg-blue-500/10 border-blue-500/30",
+  },
+  lineup_update: {
+    label: "LINEUP",
+    icon: ListOrdered,
+    className: "text-violet-400 bg-violet-500/10 border-violet-500/30",
+  },
+  game_result: {
+    label: "FINAL",
+    icon: Trophy,
+    className: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
   },
   player_update: {
     label: "PLAYER",
