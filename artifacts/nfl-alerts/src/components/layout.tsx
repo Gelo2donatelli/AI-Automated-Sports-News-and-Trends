@@ -4,6 +4,7 @@ import { Zap, Activity, Users, Settings, Rss, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SportTabs } from "./sport-tabs";
 import { UserMenu } from "./user-menu";
+import { BreakingTicker } from "./breaking-ticker";
 
 interface LayoutProps {
   children: ReactNode;
@@ -41,6 +42,9 @@ export function Layout({ children }: LayoutProps) {
             <UserMenu />
           </div>
         </div>
+
+        {/* Breaking news ticker */}
+        <BreakingTicker />
 
         {/* Nav tab bar — scrollable on mobile, comfortable on desktop */}
         <div className="border-t border-border/60 bg-card/50">
