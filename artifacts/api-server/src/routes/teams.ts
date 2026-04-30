@@ -8,6 +8,7 @@ const router: IRouter = Router();
 function teamToResponse(t: typeof teamsTable.$inferSelect) {
   return {
     id: t.id,
+    sport: t.sport,
     name: t.name,
     city: t.city,
     abbreviation: t.abbreviation,
@@ -21,8 +22,17 @@ function teamToResponse(t: typeof teamsTable.$inferSelect) {
   };
 }
 
-router.get("/teams", async (_req, res): Promise<void> => {
-  const rows = await db.select().from(teamsTable);
+function sportFromQuery(q: unknown): string | undefined {
+  if (typeof q !== "string") return undefined;
+  const s = q.toLowerCase();
+  return s === "nfl" || s === "mlb" || s === "nba" ? s : undefined;
+}
+
+router.get("/teams", async (req, res): Promise<void> => {
+  const sport = sportFromQuery(req.query.sport);
+  const rows = sport
+    ? await db.select().from(teamsTable).where(eq(teamsTable.sport, sport))
+    : await db.select().from(teamsTable);
   rows.sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name));
   res.json(rows.map(teamToResponse));
 });

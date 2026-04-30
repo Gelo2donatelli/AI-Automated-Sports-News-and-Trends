@@ -12,14 +12,16 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useSport, SPORT_LABELS } from "@/hooks/use-sport";
 
 export default function Analyst() {
   const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { sport, sportParam } = useSport();
 
   const { data: insights, isLoading } = useListInsights(
-    { limit: 50 },
+    { limit: 50, sport: sportParam },
     { query: { refetchInterval: 60_000 } },
   );
 
@@ -58,7 +60,7 @@ export default function Analyst() {
               Analyst Desk
             </h1>
             <p className="text-muted-foreground text-sm font-mono mt-1">
-              AI-generated trends, predictions & matchup intel from live news
+              {SPORT_LABELS[sport]} · AI-generated trends, predictions & matchup intel from live news
             </p>
           </div>
           <div className="flex items-center gap-3">

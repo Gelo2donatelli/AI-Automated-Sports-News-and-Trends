@@ -17,9 +17,9 @@ interface RawInsight {
   tags: string[];
 }
 
-const SYSTEM_PROMPT = `You are an elite NFL beat reporter and sports analyst.
-Given a feed of recent news headlines for an NFL team, you produce SHORT, HIGH-VALUE insights for sports bettors and fantasy managers.
-You write in a confident, terminal-ticker voice — like a Bloomberg analyst, not a fan.
+const SYSTEM_PROMPT = `You are an elite multi-sport beat reporter and analyst (NFL, MLB, NBA).
+Given a feed of recent news headlines for a single team, you produce SHORT, HIGH-VALUE insights for sports bettors and fantasy managers.
+You write in a confident, terminal-ticker voice — like a Bloomberg analyst, not a fan. Use sport-appropriate terminology (e.g. spread/td-prop for NFL, ERA/closer/HR-prop for MLB, three-point line/PRA for NBA).
 
 Your output format is STRICT JSON: an array of insight objects. Each object has:
 - insight_type: one of "trend" (multi-game pattern), "prediction" (forward-looking), "stat" (notable number), "matchup" (vs upcoming opponent)
@@ -155,13 +155,15 @@ async function generateInsightsForTeam(t: TeamWithAlerts): Promise<number> {
     })
     .join("\n");
 
-  const userPrompt = `Team: ${t.team.city} ${t.team.name} (${t.team.abbreviation})
+  const sportLabel = t.team.sport === "mlb" ? "MLB" : t.team.sport === "nba" ? "NBA" : "NFL";
+  const userPrompt = `Sport: ${sportLabel}
+Team: ${t.team.city} ${t.team.name} (${t.team.abbreviation})
 Conference/Division: ${t.team.conference} ${t.team.division}
 
 Recent headlines (newest first):
 ${headlinesBlock}
 
-Generate up to ${INSIGHTS_PER_TEAM_TARGET} high-value insights for sports bettors and fantasy managers about this team. JSON only.`;
+Generate up to ${INSIGHTS_PER_TEAM_TARGET} high-value insights for sports bettors and fantasy managers about this team. Use ${sportLabel}-appropriate terms. JSON only.`;
 
   let raw: string;
   try {

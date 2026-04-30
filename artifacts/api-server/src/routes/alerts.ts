@@ -19,6 +19,7 @@ type TeamRow = typeof teamsTable.$inferSelect;
 function joinAlertWithTeam(alert: AlertRow, team: TeamRow) {
   return {
     id: alert.id,
+    sport: team.sport,
     teamId: alert.teamId,
     teamName: team.name,
     teamCity: team.city,
@@ -37,6 +38,12 @@ function joinAlertWithTeam(alert: AlertRow, team: TeamRow) {
   };
 }
 
+function sportFromQuery(q: unknown): string | undefined {
+  if (typeof q !== "string") return undefined;
+  const s = q.toLowerCase();
+  return s === "nfl" || s === "mlb" || s === "nba" ? s : undefined;
+}
+
 router.get("/alerts", async (req, res): Promise<void> => {
   const parsed = ListAlertsQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -44,7 +51,9 @@ router.get("/alerts", async (req, res): Promise<void> => {
     return;
   }
   const { teamId, category, priority, limit, search } = parsed.data;
+  const sport = sportFromQuery(req.query.sport);
   const conditions = [];
+  if (sport) conditions.push(eq(teamsTable.sport, sport));
   if (teamId) conditions.push(eq(alertsTable.teamId, teamId));
   if (category) conditions.push(eq(alertsTable.category, category));
   if (priority) conditions.push(eq(alertsTable.priority, priority));
@@ -93,13 +102,14 @@ router.get("/alerts/breaking", async (req, res): Promise<void> => {
     return;
   }
   const { limit } = parsed.data;
+  const sport = sportFromQuery(req.query.sport);
+  const conditions = [sql`${alertsTable.priority} IN ('breaking', 'high')`];
+  if (sport) conditions.push(eq(teamsTable.sport, sport));
   const rows = await db
     .select({ alert: alertsTable, team: teamsTable })
     .from(alertsTable)
     .innerJoin(teamsTable, eq(teamsTable.id, alertsTable.teamId))
-    .where(
-      sql`${alertsTable.priority} IN ('breaking', 'high')`,
-    )
+    .where(and(...conditions))
     .orderBy(desc(alertsTable.publishedAt))
     .limit(Math.min(limit ?? 10, 100));
   res.json(rows.map(({ alert, team }) => joinAlertWithTeam(alert, team)));
@@ -259,6 +269,7 @@ router.get("/stats/trending-teams", async (req, res): Promise<void> => {
     return;
   }
   const limit = Math.min(parsed.data.limit ?? 8, 32);
+  const sport = sportFromQuery(req.query.sport);
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const rows = await db
@@ -279,6 +290,7 @@ router.get("/stats/trending-teams", async (req, res): Promise<void> => {
         gte(alertsTable.publishedAt, since),
       ),
     )
+    .where(sport ? eq(teamsTable.sport, sport) : undefined)
     .groupBy(teamsTable.id)
     .orderBy(sql`count(${alertsTable.id}) desc`)
     .limit(limit);
@@ -295,6 +307,7 @@ router.get("/stats/trending-teams", async (req, res): Promise<void> => {
 function teamToResponse(t: TeamRow) {
   return {
     id: t.id,
+    sport: t.sport,
     name: t.name,
     city: t.city,
     abbreviation: t.abbreviation,

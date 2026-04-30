@@ -3,10 +3,12 @@ import { AlertCard } from "@/components/alert-card";
 import { useGetBreakingAlerts } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Zap } from "lucide-react";
+import { useSport, SPORT_LABELS } from "@/hooks/use-sport";
 
 export default function Breaking() {
+  const { sport, sportParam } = useSport();
   const { data: alerts, isLoading } = useGetBreakingAlerts(
-    { limit: 50 },
+    { limit: 50, sport: sportParam },
     { query: { refetchInterval: 30000 } }
   );
 
@@ -19,7 +21,7 @@ export default function Breaking() {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-destructive uppercase">Breaking News</h1>
-            <p className="text-muted-foreground text-sm font-mono mt-1">High-priority alerts across the league</p>
+            <p className="text-muted-foreground text-sm font-mono mt-1">{SPORT_LABELS[sport]} · High-priority alerts across the league</p>
           </div>
         </div>
 

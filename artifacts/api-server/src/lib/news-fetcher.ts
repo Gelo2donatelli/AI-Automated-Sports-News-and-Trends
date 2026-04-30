@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 import { db, alertsTable, teamsTable, refreshStateTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { logger } from "./logger";
-import { NFL_TEAMS } from "./teams-data";
+import { ALL_TEAMS } from "./teams-data";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; GridironAlerts/1.0; +https://replit.com)";
+  "Mozilla/5.0 (compatible; PressboxWire/1.0; +https://replit.com)";
 
 interface ParsedItem {
   title: string;
@@ -80,25 +80,25 @@ function categorize(headline: string, summary?: string): string {
 
   // Coaching: hires, fires, coordinator changes, scheme talk
   if (
-    /\b(head coach|coach[ie]|coaching|coordinator|fired|hired|hiring|firing|interim|playcaller|play[- ]caller|staff change|assistant coach|coach\b)\b/.test(
+    /\b(head coach|coach[ie]|coaching|coordinator|fired|hired|hiring|firing|interim|playcaller|play[- ]caller|staff change|assistant coach|manager fired|manager hired|skipper|bench coach|pitching coach|hitting coach|head coach hired|coach\b)\b/.test(
       text,
     )
   ) {
     return "coaching_update";
   }
 
-  // Player-centric: injuries, individual performance, trades involving named player, signings, suspensions, depth-chart
+  // Player-centric: injuries, performance, trades, signings, depth chart, sport-specific stats
   if (
-    /\b(injur|injured|hurt|out for season|tear|torn|sprain|concussion|knee|hamstring|ankle|shoulder|surgery|placed on ir|ir designat|reserve\/injured|questionable|doubtful|ruled out|sidelined|did not practice|dnp|trade[ds]?|trading|acquired|acquire|sign(ed|s|ing)?|contract|extension|free agent|re-signed|resigned|suspended|suspension|fined|arrest|charged|starter|starting|benched|demoted|promoted|inactive|depth chart|qb1|rb1|wr1|backup|named starter|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|fantasy|prop)\b/.test(
+    /\b(injur|injured|hurt|out for season|tear|torn|sprain|concussion|knee|hamstring|ankle|shoulder|elbow|achilles|surgery|placed on ir|ir designat|reserve\/injured|injured list|il \b|10[- ]day il|15[- ]day il|60[- ]day il|day[- ]to[- ]day|questionable|doubtful|ruled out|sidelined|did not practice|dnp|trade[ds]?|trading|acquired|acquire|sign(ed|s|ing)?|contract|extension|free agent|re-signed|resigned|suspended|suspension|fined|arrest|charged|starter|starting|benched|demoted|promoted|inactive|depth chart|qb1|rb1|wr1|backup|named starter|touchdown|td|yards|rushed for|passed for|catches|reception|interception|sack|career-high|fantasy|prop|home run|hr|grand slam|rbi|strikeout|no-hitter|complete game|era|batting average|on-base|slugging|stolen base|saves|closer|reliever|setup man|three-pointer|3-pointer|triple-double|double-double|points|rebound|assist|blocks|steal|dunk|buzzer beater|playoff bracket|first round pick)\b/.test(
       text,
     )
   ) {
     return "player_update";
   }
 
-  // Team-level: front office, results, season trends, division/playoff implications
+  // Team-level: front office, results, season trends, standings/playoff implications
   if (
-    /\b(team|franchise|roster|defense|offense|special teams|rank(ed|ing|s)?|standings|division|playoff|wild ?card|seed|record|win streak|losing streak|loss|won|beat|defeated|matchup|against|scheme|game ?plan|schedule|bye week|practice squad|cap space|salary cap|gm |general manager|owner|stadium|draft pick)\b/.test(
+    /\b(team|franchise|roster|defense|offense|special teams|rotation|bullpen|lineup|rank(ed|ing|s)?|standings|division|wild ?card|seed|record|win streak|losing streak|loss|won|beat|defeated|matchup|against|scheme|game ?plan|schedule|bye week|practice squad|cap space|salary cap|luxury tax|gm |general manager|owner|stadium|ballpark|arena|draft pick|prospect|farm system|minor league|two-way contract|g[- ]league|series|sweep|playoff)\b/.test(
       text,
     )
   ) {
@@ -219,9 +219,9 @@ export async function refreshAllFeeds(): Promise<RefreshSummary> {
     let newAlerts = 0;
     let teamsRefreshed = 0;
 
-    const concurrency = 6;
+    const concurrency = 8;
     let cursor = 0;
-    const queue = NFL_TEAMS.slice();
+    const queue = ALL_TEAMS.slice();
 
     async function worker() {
       while (cursor < queue.length) {
@@ -280,56 +280,46 @@ export async function refreshAllFeeds(): Promise<RefreshSummary> {
 }
 
 export async function ensureTeamsSeeded(): Promise<void> {
-  const existing = await db.select({ id: teamsTable.id }).from(teamsTable).limit(1);
-  if (existing.length > 0) {
-    // Make sure all 32 are present (idempotent upsert)
-    await db
-      .insert(teamsTable)
-      .values(
-        NFL_TEAMS.map((t) => ({
-          id: t.id,
-          name: t.name,
-          city: t.city,
-          abbreviation: t.abbreviation,
-          conference: t.conference,
-          division: t.division,
-          primaryColor: t.primaryColor,
-          secondaryColor: t.secondaryColor,
-          slug: t.slug,
-          yardbarkerSlug: t.yardbarkerSlug,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: teamsTable.id,
-        set: {
-          name: sql`excluded.name`,
-          city: sql`excluded.city`,
-          abbreviation: sql`excluded.abbreviation`,
-          conference: sql`excluded.conference`,
-          division: sql`excluded.division`,
-          primaryColor: sql`excluded.primary_color`,
-          secondaryColor: sql`excluded.secondary_color`,
-          slug: sql`excluded.slug`,
-          yardbarkerSlug: sql`excluded.yardbarker_slug`,
-        },
-      });
-    return;
-  }
-  await db.insert(teamsTable).values(
-    NFL_TEAMS.map((t) => ({
-      id: t.id,
-      name: t.name,
-      city: t.city,
-      abbreviation: t.abbreviation,
-      conference: t.conference,
-      division: t.division,
-      primaryColor: t.primaryColor,
-      secondaryColor: t.secondaryColor,
-      slug: t.slug,
-      yardbarkerSlug: t.yardbarkerSlug,
-    })),
+  const rows = ALL_TEAMS.map((t) => ({
+    id: t.id,
+    sport: t.sport,
+    name: t.name,
+    city: t.city,
+    abbreviation: t.abbreviation,
+    conference: t.conference,
+    division: t.division,
+    primaryColor: t.primaryColor,
+    secondaryColor: t.secondaryColor,
+    slug: t.slug,
+    yardbarkerSlug: t.yardbarkerSlug,
+  }));
+  await db
+    .insert(teamsTable)
+    .values(rows)
+    .onConflictDoUpdate({
+      target: teamsTable.id,
+      set: {
+        sport: sql`excluded.sport`,
+        name: sql`excluded.name`,
+        city: sql`excluded.city`,
+        abbreviation: sql`excluded.abbreviation`,
+        conference: sql`excluded.conference`,
+        division: sql`excluded.division`,
+        primaryColor: sql`excluded.primary_color`,
+        secondaryColor: sql`excluded.secondary_color`,
+        slug: sql`excluded.slug`,
+        yardbarkerSlug: sql`excluded.yardbarker_slug`,
+      },
+    });
+  logger.info(
+    {
+      total: rows.length,
+      nfl: rows.filter((r) => r.sport === "nfl").length,
+      mlb: rows.filter((r) => r.sport === "mlb").length,
+      nba: rows.filter((r) => r.sport === "nba").length,
+    },
+    "Seeded teams across sports",
   );
-  logger.info({ teams: NFL_TEAMS.length }, "Seeded NFL teams");
 }
 
 let pollerStarted = false;

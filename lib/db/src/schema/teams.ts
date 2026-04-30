@@ -2,6 +2,7 @@ import { pgTable, text, integer } from "drizzle-orm/pg-core";
 
 export const teamsTable = pgTable("teams", {
   id: text("id").primaryKey(),
+  sport: text("sport").notNull().default("nfl"),
   name: text("name").notNull(),
   city: text("city").notNull(),
   abbreviation: text("abbreviation").notNull(),

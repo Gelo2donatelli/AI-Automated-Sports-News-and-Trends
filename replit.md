@@ -2,7 +2,7 @@
 
 ## Overview
 
-GRIDIRON ALERTS — a real-time NFL news alerts dashboard for sports bettors and fantasy managers. Pulls live news from Yardbarker per-team RSS feeds, auto-categorizes alerts (injury, trade, lineup, signing, suspension, performance, general), prioritizes them (breaking, high, normal), and streams them into a live feed dashboard with team filtering and user preference persistence.
+PRESSBOX WIRE — a real-time multi-sport news + AI insights dashboard covering **NFL, MLB, and NBA** (92 teams total). Pulls live news from Yardbarker per-team RSS feeds, auto-categorizes alerts (player_update, team_update, coaching_update, general), prioritizes them (breaking, high, normal), and streams them into a live feed dashboard with sport filtering, team filtering and user preference persistence. Includes an "Analyst Desk" that uses Claude (via the Replit Anthropic AI proxy) to generate sport-aware trends, predictions, stats, and matchup insights from the news stream.
 
 ## Stack
 
@@ -26,7 +26,7 @@ GRIDIRON ALERTS — a real-time NFL news alerts dashboard for sports bettors and
 
 ## Data Model (lib/db/src/schema)
 
-- `teams` — 32 NFL teams (id, city, name, abbreviation, conference, division, primary/secondary color, slug, yardbarker slug, alert count)
+- `teams` — 92 teams across 3 sports (32 NFL + 30 MLB + 30 NBA), each with `sport` ('nfl' | 'mlb' | 'nba'), id, city, name, abbreviation, conference, division, primary/secondary color, slug, yardbarker slug, alert count. Seed data in `artifacts/api-server/src/lib/teams-data/{nfl,mlb,nba}.ts`.
 - `alerts` — news alerts (id, team_id, headline, summary, category, priority, source name/url, published_at)
 - `insights` — AI-generated stats/trends (id, team_id, insight_type, title, body, confidence, tags, related_alert_ids)
 - `preferences` — per-client (anonymous) followed teams + enabled categories

@@ -20,6 +20,12 @@ const TYPE_META: Record<
   matchup: { label: "MATCHUP", icon: Swords, color: "text-violet-400" },
 };
 
+const SPORT_PILL: Record<string, string> = {
+  nfl: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  mlb: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  nba: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+};
+
 function confidenceTone(c: number): string {
   if (c >= 80) return "text-emerald-400";
   if (c >= 60) return "text-amber-400";
@@ -58,6 +64,11 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
           <div className="px-2 py-1 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/30">
             LEAGUE
           </div>
+        )}
+        {insight.sport && (
+          <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", SPORT_PILL[insight.sport] ?? "bg-muted text-muted-foreground border-border")}>
+            {insight.sport}
+          </span>
         )}
         <span className={cn("flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider", meta.color)}>
           <Icon className="h-3.5 w-3.5" />

@@ -11,6 +11,12 @@ interface AlertCardProps {
   index?: number;
 }
 
+const SPORT_PILL: Record<string, string> = {
+  nfl: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  mlb: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  nba: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+};
+
 export function AlertCard({ alert, index = 0 }: AlertCardProps) {
   const isBreaking = alert.priority === "breaking";
   const isHigh = alert.priority === "high";
@@ -41,7 +47,7 @@ export function AlertCard({ alert, index = 0 }: AlertCardProps) {
                 primaryColor={alert.teamPrimaryColor} 
                 size="sm"
               />
-              <div className="flex items-center gap-2 text-xs font-mono">
+              <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
                 {isBreaking && (
                   <span className="flex items-center gap-1.5 text-destructive font-bold">
                     <span className="relative flex h-2 w-2">
@@ -49,6 +55,11 @@ export function AlertCard({ alert, index = 0 }: AlertCardProps) {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                     </span>
                     BREAKING
+                  </span>
+                )}
+                {alert.sport && (
+                  <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", SPORT_PILL[alert.sport] ?? "bg-muted text-muted-foreground border-border")}>
+                    {alert.sport}
                   </span>
                 )}
                 <span className="text-muted-foreground uppercase tracking-wider">

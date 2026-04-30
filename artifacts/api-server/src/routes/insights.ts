@@ -12,6 +12,7 @@ type TeamRow = typeof teamsTable.$inferSelect;
 function toResponse(insight: InsightRow, team: TeamRow | null) {
   return {
     id: insight.id,
+    sport: team?.sport,
     teamId: insight.teamId ?? undefined,
     teamName: team?.name,
     teamCity: team?.city,
@@ -28,6 +29,12 @@ function toResponse(insight: InsightRow, team: TeamRow | null) {
   };
 }
 
+function sportFromQuery(q: unknown): string | undefined {
+  if (typeof q !== "string") return undefined;
+  const s = q.toLowerCase();
+  return s === "nfl" || s === "mlb" || s === "nba" ? s : undefined;
+}
+
 router.get("/insights", async (req, res): Promise<void> => {
   const parsed = ListInsightsQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -35,8 +42,10 @@ router.get("/insights", async (req, res): Promise<void> => {
     return;
   }
   const { teamId, limit } = parsed.data;
+  const sport = sportFromQuery(req.query.sport);
   const conditions = [];
   if (teamId) conditions.push(eq(insightsTable.teamId, teamId));
+  if (sport) conditions.push(eq(teamsTable.sport, sport));
 
   const rows = await db
     .select({ insight: insightsTable, team: teamsTable })

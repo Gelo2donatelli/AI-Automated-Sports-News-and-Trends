@@ -11,6 +11,7 @@ import { TeamBadge } from "@/components/team-badge";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSport } from "@/hooks/use-sport";
 
 const CATEGORIES = [
   { id: "player_update", label: "Player Updates", desc: "Injuries, trades, signings, depth chart, props & performance" },
@@ -19,11 +20,19 @@ const CATEGORIES = [
   { id: "general", label: "General News", desc: "Stadium, ownership, league-wide and miscellaneous" },
 ];
 
+const SPORT_HEADER: Record<string, string> = {
+  nfl: "NFL",
+  mlb: "MLB",
+  nba: "NBA",
+};
+const SPORT_ORDER: Record<string, number> = { nfl: 0, mlb: 1, nba: 2 };
+
 export default function Preferences() {
   const clientId = useClientId();
   const { toast } = useToast();
   
-  const { data: teams, isLoading: isTeamsLoading } = useListTeams();
+  const { sportParam } = useSport();
+  const { data: teams, isLoading: isTeamsLoading } = useListTeams({ sport: sportParam });
   const { data: prefs, isLoading: isPrefsLoading } = useGetPreferences(
     { clientId: clientId || "" },
     { query: { enabled: !!clientId } }
@@ -146,32 +155,47 @@ export default function Preferences() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {teams.map(team => {
-                    const isSelected = followedTeams.has(team.id);
-                    return (
-                      <button
-                        key={team.id}
-                        onClick={() => toggleTeam(team.id)}
-                        className={cn(
-                          "flex flex-col items-center justify-center p-3 rounded-md border transition-all",
-                          isSelected 
-                            ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                            : "border-border bg-card hover:bg-muted/50 hover:border-muted-foreground/50"
-                        )}
-                      >
-                        <TeamBadge 
-                          abbreviation={team.abbreviation} 
-                          primaryColor={team.primaryColor} 
-                          size="md"
-                          className="mb-2 shadow-md" 
-                        />
-                        <span className="text-xs font-bold uppercase tracking-wider">{team.city}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <CardContent className="space-y-6">
+                {Object.entries(
+                  teams.reduce((acc, t) => {
+                    const k = t.sport ?? "nfl";
+                    (acc[k] ||= []).push(t);
+                    return acc;
+                  }, {} as Record<string, typeof teams>),
+                )
+                  .sort(([a], [b]) => (SPORT_ORDER[a] ?? 99) - (SPORT_ORDER[b] ?? 99))
+                  .map(([sportKey, sportTeams]) => (
+                    <div key={sportKey}>
+                      <h3 className="text-xs font-bold font-mono uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                        {SPORT_HEADER[sportKey] ?? sportKey.toUpperCase()} · {sportTeams.length} teams
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {sportTeams.map((team) => {
+                          const isSelected = followedTeams.has(team.id);
+                          return (
+                            <button
+                              key={team.id}
+                              onClick={() => toggleTeam(team.id)}
+                              className={cn(
+                                "flex flex-col items-center justify-center p-3 rounded-md border transition-all",
+                                isSelected
+                                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                                  : "border-border bg-card hover:bg-muted/50 hover:border-muted-foreground/50",
+                              )}
+                            >
+                              <TeamBadge
+                                abbreviation={team.abbreviation}
+                                primaryColor={team.primaryColor}
+                                size="md"
+                                className="mb-2 shadow-md"
+                              />
+                              <span className="text-xs font-bold uppercase tracking-wider">{team.city}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
               </CardContent>
             </Card>
 

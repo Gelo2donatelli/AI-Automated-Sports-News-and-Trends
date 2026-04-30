@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: NFL News Alerts API
+  description: Pressbox Wire — multi-sport (NFL/MLB/NBA) news + AI insights API
 servers:
   - url: /api
     description: Base API path
@@ -34,7 +34,14 @@ paths:
     get:
       operationId: listTeams
       tags: [teams]
-      summary: List all NFL teams
+      summary: List teams across sports (filterable by sport)
+      parameters:
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba). Omit for all sports.
       responses:
         "200":
           description: Teams list
@@ -49,7 +56,7 @@ paths:
     get:
       operationId: getTeam
       tags: [teams]
-      summary: Get a single NFL team
+      summary: Get a single team
       parameters:
         - name: teamId
           in: path
@@ -70,6 +77,12 @@ paths:
       tags: [alerts]
       summary: List news alerts
       parameters:
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba)
         - name: teamId
           in: query
           required: false
@@ -162,6 +175,12 @@ paths:
       tags: [alerts]
       summary: Get the most recent breaking alerts across the league
       parameters:
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba)
         - name: limit
           in: query
           required: false
@@ -232,6 +251,12 @@ paths:
       tags: [alerts]
       summary: Teams with most news activity in the last 24h
       parameters:
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba)
         - name: limit
           in: query
           required: false
@@ -254,6 +279,12 @@ paths:
       tags: [insights]
       summary: List AI-generated stats and trends insights
       parameters:
+        - name: sport
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by sport (nfl, mlb, nba)
         - name: teamId
           in: query
           required: false
@@ -340,6 +371,9 @@ components:
       properties:
         id:
           type: string
+        sport:
+          type: string
+          description: nfl, mlb, or nba
         name:
           type: string
         city:
@@ -362,6 +396,7 @@ components:
           type: integer
       required:
         - id
+        - sport
         - name
         - city
         - abbreviation
@@ -533,6 +568,9 @@ components:
       properties:
         id:
           type: string
+        sport:
+          type: string
+          description: nfl, mlb, or nba (when team scoped)
         teamId:
           type: string
           description: Optional - omitted for league-wide insights

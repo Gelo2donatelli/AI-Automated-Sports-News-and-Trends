@@ -1,18 +1,6 @@
-export interface NflTeamSeed {
-  id: string;
-  city: string;
-  name: string;
-  abbreviation: string;
-  conference: string;
-  division: string;
-  primaryColor: string;
-  secondaryColor: string;
-  slug: string;
-  /** Yardbarker RSS path segment, e.g. "34-cleveland-browns" */
-  yardbarkerSlug: string;
-}
+import type { TeamSeed } from "./types";
 
-export const NFL_TEAMS: NflTeamSeed[] = [
+export const NFL_TEAMS: TeamSeed[] = (([
   // AFC East
   { id: "buf", city: "Buffalo", name: "Bills", abbreviation: "BUF", conference: "AFC", division: "East", primaryColor: "#00338D", secondaryColor: "#C60C30", slug: "buffalo-bills", yardbarkerSlug: "32-buffalo-bills" },
   { id: "mia", city: "Miami", name: "Dolphins", abbreviation: "MIA", conference: "AFC", division: "East", primaryColor: "#008E97", secondaryColor: "#FC4C02", slug: "miami-dolphins", yardbarkerSlug: "40-miami-dolphins" },
@@ -60,4 +48,4 @@ export const NFL_TEAMS: NflTeamSeed[] = [
   { id: "lar", city: "Los Angeles", name: "Rams", abbreviation: "LAR", conference: "NFC", division: "West", primaryColor: "#003594", secondaryColor: "#FFA300", slug: "los-angeles-rams", yardbarkerSlug: "60-los-angeles-rams" },
   { id: "sf", city: "San Francisco", name: "49ers", abbreviation: "SF", conference: "NFC", division: "West", primaryColor: "#AA0000", secondaryColor: "#B3995D", slug: "san-francisco-49ers", yardbarkerSlug: "58-san-francisco-49ers" },
   { id: "sea", city: "Seattle", name: "Seahawks", abbreviation: "SEA", conference: "NFC", division: "West", primaryColor: "#002244", secondaryColor: "#69BE28", slug: "seattle-seahawks", yardbarkerSlug: "59-seattle-seahawks" },
-];
+] as const).map((t) => ({ ...t, sport: "nfl" as const })));

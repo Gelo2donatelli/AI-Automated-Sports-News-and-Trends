@@ -5,10 +5,10 @@
  * Pressbox Wire — multi-sport (NFL/MLB/NBA) news + AI insights API
  * OpenAPI spec version: 0.1.0
  */
-import type { Alert } from "./alert";
-import type { Team } from "./team";
 
-export interface TeamAlertsGroup {
-  team: Team;
-  alerts: Alert[];
-}
+export type ListTeamsParams = {
+  /**
+   * Filter by sport (nfl, mlb, nba). Omit for all sports.
+   */
+  sport?: string;
+};

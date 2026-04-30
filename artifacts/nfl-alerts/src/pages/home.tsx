@@ -7,6 +7,7 @@ import { InsightCard } from "@/components/insight-card";
 import { RefreshButton } from "@/components/refresh-button";
 import { TeamBadge } from "@/components/team-badge";
 import { useClientId } from "@/hooks/use-client-id";
+import { useSport, SPORT_LABELS } from "@/hooks/use-sport";
 import {
   useGetOverviewStats,
   useGetAlertFeed,
@@ -22,6 +23,7 @@ import { motion } from "framer-motion";
 export default function Home() {
   const clientId = useClientId();
   const [feedMode, setFeedMode] = useState<"all" | "following">("all");
+  const { sport, sportParam } = useSport();
 
   const { data: stats, isLoading: isStatsLoading } = useGetOverviewStats();
   
@@ -36,14 +38,14 @@ export default function Home() {
     : undefined;
 
   const { data: feed, isLoading: isFeedLoading } = useGetAlertFeed(
-    { teamIds: teamIdsFilter, limit: 50 },
+    { teamIds: teamIdsFilter, limit: 50, sport: sportParam },
     { query: { refetchInterval: 30000 } } // Auto-poll every 30s
   );
 
-  const { data: trending, isLoading: isTrendingLoading } = useGetTrendingTeams({ limit: 5 });
+  const { data: trending, isLoading: isTrendingLoading } = useGetTrendingTeams({ limit: 5, sport: sportParam });
 
   const { data: topInsights } = useListInsights(
-    { limit: 4 },
+    { limit: 4, sport: sportParam },
     { query: { refetchInterval: 60_000 } },
   );
 
@@ -59,7 +61,7 @@ export default function Home() {
                 Live Wire
               </h1>
               <p className="text-muted-foreground text-sm font-mono mt-1">
-                Real-time league activity • Auto-refreshing
+                {SPORT_LABELS[sport]} · Real-time league activity • Auto-refreshing
               </p>
             </div>
             

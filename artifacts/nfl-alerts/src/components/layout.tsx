@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Zap, Activity, Users, Settings, Rss, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SportTabs } from "./sport-tabs";
 
 interface LayoutProps {
   children: ReactNode;
@@ -24,7 +25,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="container mx-auto flex h-14 items-center px-4">
           <Link href="/" className="flex items-center gap-2 font-mono font-bold tracking-tighter text-lg hover:text-primary transition-colors">
             <Activity className="h-5 w-5 text-primary" />
-            <span>GRIDIRON<span className="text-primary">ALERTS</span></span>
+            <span>PRESSBOX<span className="text-primary">WIRE</span></span>
           </Link>
 
           <nav className="ml-auto hidden md:flex items-center gap-6 text-sm font-medium">
@@ -46,6 +47,7 @@ export function Layout({ children }: LayoutProps) {
             })}
           </nav>
         </div>
+        <SportTabs />
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
@@ -55,7 +57,7 @@ export function Layout({ children }: LayoutProps) {
       <footer className="border-t border-border py-6 md:py-8 mt-auto bg-card">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p className="font-mono text-xs uppercase tracking-widest opacity-50 flex items-center justify-center gap-2">
-            <Activity className="h-3 w-3" /> Gridiron Alerts Terminal
+            <Activity className="h-3 w-3" /> Pressbox Wire · NFL · MLB · NBA
           </p>
         </div>
       </footer>
